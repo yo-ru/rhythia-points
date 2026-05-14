@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { NavLink } from "./NavLink";
 import { DiscordButton } from "./DiscordButton";
+import { GitHubButton } from "./GitHubButton";
 import { getSiteSummary } from "@/lib/counts";
 import { relativeDate } from "@/lib/format";
 
@@ -37,7 +38,10 @@ export async function Header() {
               </>
             )}
           </div>
-          <DiscordButton />
+          <div className="flex flex-col items-end gap-1">
+            <DiscordButton />
+            <GitHubButton />
+          </div>
         </div>
       </div>
     </header>
