@@ -200,39 +200,33 @@ async function main() {
     console.log(
       `phase 2 · ${toScrape.length} to scrape · ${playersSkipped} unchanged (skipped) · ${CONCURRENCY} workers`,
     );
-    await parallelMap(
-      toScrape,
-      CONCURRENCY,
-      async ({ user }, i) => {
-        try {
-          await persistPlayer(user);
-          const res = await rhythia.getUserScores({ id: user.id, limit: TOP_SCORES_PER_PLAYER });
-          const top = res.top ?? [];
-          // Don't wipe an active player's scores on a transient empty response.
-          if (top.length === 0 && typeof user.play_count === "number" && user.play_count > 0) {
-            return;
-          }
-          await persistScoresForPlayer(user.id, top);
-          if (typeof user.play_count === "number") {
-            await prisma.player.update({
-              where: { id: user.id },
-              data: { lastPlayCount: user.play_count },
-            });
-          }
-          playersSeen += 1;
-          scoresSeen += top.length;
-          if ((i + 1) % 100 === 0 || i === toScrape.length - 1) {
-            console.log(
-              `  [${(i + 1).toString().padStart(5)}/${toScrape.length}] ${playersSeen} scraped · ${scoresSeen} scores`,
-            );
-          }
-        } catch (err) {
-          console.error(`  ! player ${user.id} (${user.username}) failed:`, (err as Error).message);
+    await parallelMap(toScrape, CONCURRENCY, async ({ user, rank }, i) => {
+      try {
+        await persistPlayer(user);
+        const res = await rhythia.getUserScores({ id: user.id, limit: TOP_SCORES_PER_PLAYER });
+        const top = res.top ?? [];
+        // Don't wipe an active player's scores on a transient empty response.
+        if (top.length === 0 && typeof user.play_count === "number" && user.play_count > 0) {
+          return;
         }
-        await sleep(DELAY_MS);
-      },
-      { timeoutMs: 60_000 },
-    );
+        await persistScoresForPlayer(user.id, top);
+        if (typeof user.play_count === "number") {
+          await prisma.player.update({
+            where: { id: user.id },
+            data: { lastPlayCount: user.play_count },
+          });
+        }
+        playersSeen += 1;
+        scoresSeen += top.length;
+        console.log(
+          `  [${(i + 1).toString().padStart(5)}/${toScrape.length}] ` +
+          `#${rank} ${user.username ?? user.id} → ${top.length} scores`,
+        );
+      } catch (err) {
+        console.error(`  ! player ${user.id} (${user.username}) failed:`, (err as Error).message);
+      }
+      await sleep(DELAY_MS);
+    });
   } finally {
     await prisma.scrapeRun.update({
       where: { id: run.id },
