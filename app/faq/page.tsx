@@ -40,6 +40,33 @@ export default function FaqPage() {
         </p>
       </Section>
 
+      <Section title="How often does the data refresh?">
+        <p>
+          Once a week, Sunday 03:00 UTC. The &ldquo;updated&rdquo; timestamp in the
+          header reflects when the last refresh finished.
+        </p>
+        <p className="mt-2">
+          Within a single refresh, players whose play count hasn&apos;t changed since
+          the previous run are skipped &mdash; their top 100 is necessarily identical, so
+          there&apos;s nothing to re-fetch. That keeps the weekly cost roughly proportional
+          to how many people actually played, not to the total leaderboard size.
+        </p>
+      </Section>
+
+      <Section title="How is overweightness different from raw RP?">
+        <p>
+          Raw RP rewards difficulty &mdash; harder map, more RP per play. Overweightness
+          rewards <em>efficiency</em>: how much RP a map hands out compared to other maps
+          you could realistically be playing instead.
+        </p>
+        <p className="mt-2">
+          A 200 RP map that&apos;s in dozens of players&apos; top 100s at 0.87× speed can
+          be more &ldquo;overweight&rdquo; than a 500 RP map that only a handful of top
+          players can pass. The first is a farm; the second is a peak. If you&apos;re trying
+          to grow your own RP, the overweight ones move the needle faster.
+        </p>
+      </Section>
+
       <Section title="Why isn't a particular map here?">
         <p>
           The list only includes maps that appear in at least one player&apos;s top 100.
