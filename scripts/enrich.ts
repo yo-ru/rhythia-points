@@ -94,7 +94,10 @@ async function main() {
   let artThrottled = 0;
   let lastThrottleWarned = 0;
 
-  await parallelMap(beatmaps, CONCURRENCY, async (bm, i) => {
+  await parallelMap(
+    beatmaps,
+    CONCURRENCY,
+    async (bm, i) => {
     try {
       const res = await rhythia.getBeatmapPageById({ mapId: bm.id, limit: 200 });
       const b = res.beatmap;
@@ -195,7 +198,9 @@ async function main() {
       console.error(`  ! ${bm.id}: ${(err as Error).message}`);
     }
     await sleep(DELAY_MS);
-  });
+    },
+    { timeoutMs: 90_000 },
+  );
 
   const elapsed = (Date.now() - startedAt) / 1000;
   console.log(
