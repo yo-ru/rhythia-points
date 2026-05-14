@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: rhythia-points-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: rhythia
+      POSTGRES_PASSWORD: rhythia
+      POSTGRES_DB: rhythia_points
+    ports:
+      - "5432:5432"
+    volumes:
+      - rhythia-points-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rhythia -d rhythia_points"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+volumes:
+  rhythia-points-pgdata:

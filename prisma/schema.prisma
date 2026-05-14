@@ -1,0 +1,106 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Player {
+  id        Int    @id
+  username  String
+  // Last scrape's upstream play_count. If unchanged on the next run we
+  // skip getUserScores for this player — their top 100 is identical.
+  lastPlayCount Int?
+
+  topScores Score[] @relation("PlayerTopScores")
+
+  @@index([username])
+}
+
+model Beatmap {
+  id          String    @id
+  pageId      Int?
+
+  title       String
+  starRating  Float?
+  difficulty  Float?
+  length      Int?
+  noteCount   Int?
+  image       String?
+  beatmapFile String?
+  rankedAt    DateTime?
+
+  mapperId    Int?
+  mapper      Mapper?   @relation(fields: [mapperId], references: [id])
+
+  variants    BeatmapVariant[]
+  scores      Score[]
+
+  bestVariantId Int?
+  bestVariant   BeatmapVariant? @relation("BeatmapBestVariant", fields: [bestVariantId], references: [id])
+
+  @@index([rankedAt(sort: Desc)])
+  @@index([starRating])
+  @@index([length])
+  @@index([title])
+  @@index([pageId])
+}
+
+model BeatmapVariant {
+  id        Int    @id @default(autoincrement())
+  beatmapId String
+  beatmap   Beatmap @relation(fields: [beatmapId], references: [id], onDelete: Cascade)
+
+  speed     Float   @default(1.0)
+  hardrock  Boolean @default(false)
+  ghost     Boolean @default(false)
+
+  avgRp          Float
+  sampleCount    Int   @default(0)
+  overweightness Float @default(0)
+
+  bestOfBeatmap Beatmap[] @relation("BeatmapBestVariant")
+
+  @@unique([beatmapId, speed, hardrock, ghost])
+  @@index([overweightness(sort: Desc)])
+  @@index([avgRp])
+}
+
+model Mapper {
+  id       Int    @id
+  username String
+
+  beatmaps Beatmap[]
+
+  @@index([username])
+}
+
+model Score {
+  id        Int    @id
+  playerId  Int
+  player    Player @relation("PlayerTopScores", fields: [playerId], references: [id], onDelete: Cascade)
+
+  beatmapId String
+  beatmap   Beatmap @relation(fields: [beatmapId], references: [id], onDelete: Cascade)
+
+  awardedRp Float
+  speed     Float   @default(1.0)
+  hardrock  Boolean @default(false)
+  ghost     Boolean @default(false)
+
+  topIndex  Int?
+
+  @@index([playerId, topIndex])
+  @@index([beatmapId])
+  @@index([awardedRp])
+}
+
+model ScrapeRun {
+  id         Int       @id @default(autoincrement())
+  startedAt  DateTime  @default(now())
+  finishedAt DateTime?
+}

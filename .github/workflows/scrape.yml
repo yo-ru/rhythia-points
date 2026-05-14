@@ -1,0 +1,59 @@
+name: scrape
+
+on:
+  schedule:
+    # Sundays 03:00 UTC. Times shift by an hour each year because of DST —
+    # GH cron doesn't honour timezones, so set to a slot you're happy with.
+    - cron: "0 3 * * 0"
+  workflow_dispatch:
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    # Pulls DATABASE_URL / DIRECT_URL / RHYTHIA_SESSION from the
+    # Production environment's secrets.
+    environment: Production
+    # Hard ceiling on a GH Actions free-tier job is 6h. Phase 2's
+    # lastPlayCount skip keeps weekly time bounded — only changed players
+    # actually re-fetch.
+    timeout-minutes: 350
+    concurrency:
+      group: scrape
+      cancel-in-progress: false
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      DIRECT_URL:   ${{ secrets.DIRECT_URL }}
+      RHYTHIA_ENV:  production
+      RHYTHIA_SESSION: ${{ secrets.RHYTHIA_SESSION }}
+      SCRAPE_MAP_LIMIT:    "20000"
+      # The standalone mass-downloader script (rhythia_mass_dl.py) runs the
+      # same beatmap endpoint at concurrency 10 with ~30ms jitter and stays
+      # under the rate limit, so these values have real-world headroom.
+      SCRAPE_DELAY_MS:     "50"
+      SCRAPE_CONCURRENCY:  "6"
+      ENRICH_CONCURRENCY:  "10"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: install
+        run: npm ci
+
+      - name: db push
+        # --accept-data-loss lets the workflow apply destructive schema
+        # changes (column drops) non-interactively. Schema lives in git, so
+        # any drop is visible in PR diff before it lands here.
+        run: npx prisma db push --skip-generate --accept-data-loss
+
+      - name: scrape
+        run: npm run scrape
+
+      - name: enrich
+        run: npm run enrich
+
+      - name: derive
+        run: npm run derive
