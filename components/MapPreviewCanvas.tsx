@@ -5,6 +5,7 @@ import type { SspmNote } from "@/lib/sspm";
 
 type Props = {
   notes: SspmNote[];
+  waypoints: Waypoint[];
   getTimeMs: () => number;
   getHitsoundVolume: () => number;
 };
@@ -87,12 +88,12 @@ const TIME_FRAC_TOL = 0.25;
 const SPIN_STRAIGHT_SIN = 0.15;
 const TURN_SIN = 0.3;
 
-type Waypoint = { x: number; y: number; ms: number; endMs: number; hits: number };
+export type Waypoint = { x: number; y: number; ms: number; endMs: number; hits: number };
 
 const MERGE_HALF = HIT_HALF * 0.85;
 const MERGE_DIST_SQ = (2 * MERGE_HALF) * (2 * MERGE_HALF);
 
-function buildWaypoints(notes: SspmNote[]): Waypoint[] {
+export function buildWaypoints(notes: SspmNote[]): Waypoint[] {
   const N = notes.length;
   if (N === 0) return [];
 
@@ -627,13 +628,13 @@ function playHitsound(ac: AudioContext, volume: number) {
   osc.stop(now + 0.05);
 }
 
-export function MapPreviewCanvas({ notes, getTimeMs, getHitsoundVolume }: Props) {
+export function MapPreviewCanvas({ notes, waypoints, getTimeMs, getHitsoundVolume }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const rafRef = useRef<number | null>(null);
   const sizeRef = useRef({ w: 0, h: 0 });
   const notesRef = useRef(notes);
-  const waypointsRef = useRef<Waypoint[]>([]);
+  const waypointsRef = useRef<Waypoint[]>(waypoints);
   const timeRef = useRef(getTimeMs);
   const hsVolRef = useRef(getHitsoundVolume);
   const [spinMode, setSpinMode] = useState(false);
@@ -642,10 +643,8 @@ export function MapPreviewCanvas({ notes, getTimeMs, getHitsoundVolume }: Props)
   const prevTimeRef = useRef<number | null>(null);
   const acRef = useRef<AudioContext | null>(null);
   const trailRef = useRef<TrailPoint[]>([]);
-  useEffect(() => {
-    notesRef.current = notes;
-    waypointsRef.current = buildWaypoints(notes);
-  }, [notes]);
+  useEffect(() => { notesRef.current = notes; }, [notes]);
+  useEffect(() => { waypointsRef.current = waypoints; }, [waypoints]);
   useEffect(() => { timeRef.current = getTimeMs; }, [getTimeMs]);
   useEffect(() => { hsVolRef.current = getHitsoundVolume; }, [getHitsoundVolume]);
 

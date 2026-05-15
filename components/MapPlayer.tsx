@@ -4,7 +4,10 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { usePathname } from "next/navigation";
 import { SpeedIcon } from "@/components/icons/SpeedIcon";
 import type { SspmNote } from "@/lib/sspm";
-import { MapPreviewCanvas } from "@/components/MapPreviewCanvas";
+import { MapPreviewCanvas, buildWaypoints } from "@/components/MapPreviewCanvas";
+import type { Waypoint } from "@/components/MapPreviewCanvas";
+
+type Phase = "audio" | "notes" | "building" | "ready";
 
 type Track = {
   id: string;
@@ -26,6 +29,8 @@ type PlayerState = {
   hitsoundVolume: number;
   previewNotes: SspmNote[] | null;
   previewLoading: boolean;
+  waypoints: Waypoint[];
+  phase: Phase | null;
 };
 
 type PlayerActions = {
@@ -63,6 +68,10 @@ export function MapPlayerProvider({ children }: { children: React.ReactNode }) {
   const [previewNotes, setPreviewNotes] = useState<SspmNote[] | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const previewReqRef = useRef(0);
+  const [audioReady, setAudioReady] = useState(false);
+  const [previewBuilding, setPreviewBuilding] = useState(false);
+  const [waypoints, setWaypoints] = useState<Waypoint[]>([]);
+  const pendingPlayRef = useRef(false);
 
   useEffect(() => {
     const el = new Audio();
@@ -71,14 +80,17 @@ export function MapPlayerProvider({ children }: { children: React.ReactNode }) {
     const onTime = () => setProgress(el.currentTime);
     const onMeta = () => setDuration(el.duration || 0);
     const onEnd = () => setPlaying(false);
+    const onCanPlay = () => setAudioReady(true);
     el.addEventListener("timeupdate", onTime);
     el.addEventListener("loadedmetadata", onMeta);
     el.addEventListener("ended", onEnd);
+    el.addEventListener("canplay", onCanPlay);
     return () => {
       el.pause();
       el.removeEventListener("timeupdate", onTime);
       el.removeEventListener("loadedmetadata", onMeta);
       el.removeEventListener("ended", onEnd);
+      el.removeEventListener("canplay", onCanPlay);
     };
   }, []);
 
@@ -101,8 +113,8 @@ export function MapPlayerProvider({ children }: { children: React.ReactNode }) {
   const play = useCallback((t: Track) => {
     const el = audioRef.current;
     if (!el) return;
-    const newPreview = (t.previewMapId ?? null) !== (track?.previewMapId ?? null);
-    if (track?.id === t.id) {
+    const sameTrack = track?.id === t.id && (t.previewMapId ?? null) === (track.previewMapId ?? null);
+    if (sameTrack) {
       if (el.paused) {
         el.play().catch(() => {});
         setPlaying(true);
@@ -111,30 +123,67 @@ export function MapPlayerProvider({ children }: { children: React.ReactNode }) {
         setPlaying(false);
       }
       el.playbackRate = t.speed;
-      if (newPreview) {
-        setTrack(t);
-        if (t.previewMapId != null) loadPreviewNotes(t.previewMapId);
-        else { previewReqRef.current++; setPreviewNotes(null); setPreviewLoading(false); }
-      }
       return;
     }
+    el.pause();
     el.src = t.src;
     el.volume = volume;
     el.muted = muted;
     el.playbackRate = t.speed;
     el.currentTime = 0;
+    el.load();
     setTrack(t);
     setProgress(0);
     setDuration(0);
-    el.play().catch(() => {});
-    setPlaying(true);
-    if (t.previewMapId != null) loadPreviewNotes(t.previewMapId);
-    else { previewReqRef.current++; setPreviewNotes(null); setPreviewLoading(false); }
+    setAudioReady(false);
+    setPlaying(false);
+    pendingPlayRef.current = true;
+    if (t.previewMapId != null) {
+      loadPreviewNotes(t.previewMapId);
+    } else {
+      previewReqRef.current++;
+      setPreviewNotes(null);
+      setPreviewLoading(false);
+      setWaypoints([]);
+      setPreviewBuilding(false);
+    }
   }, [track, volume, muted, loadPreviewNotes]);
+
+  useEffect(() => {
+    if (previewNotes == null) {
+      setWaypoints([]);
+      setPreviewBuilding(false);
+      return;
+    }
+    setPreviewBuilding(true);
+    const id = requestAnimationFrame(() => {
+      setWaypoints(buildWaypoints(previewNotes));
+      setPreviewBuilding(false);
+    });
+    return () => cancelAnimationFrame(id);
+  }, [previewNotes]);
+
+  const phase: Phase | null = useMemo(() => {
+    if (!track) return null;
+    if (!audioReady) return "audio";
+    if (track.previewMapId != null) {
+      if (previewLoading || previewNotes == null) return "notes";
+      if (previewBuilding) return "building";
+    }
+    return "ready";
+  }, [track, audioReady, previewLoading, previewNotes, previewBuilding]);
+
+  useEffect(() => {
+    if (phase === "ready" && pendingPlayRef.current) {
+      pendingPlayRef.current = false;
+      audioRef.current?.play().catch(() => {});
+      setPlaying(true);
+    }
+  }, [phase]);
 
   const toggle = useCallback(() => {
     const el = audioRef.current;
-    if (!el || !track) return;
+    if (!el || !track || !audioReady) return;
     if (el.paused) {
       el.play().catch(() => {});
       setPlaying(true);
@@ -142,7 +191,7 @@ export function MapPlayerProvider({ children }: { children: React.ReactNode }) {
       el.pause();
       setPlaying(false);
     }
-  }, [track]);
+  }, [track, audioReady]);
 
   const close = useCallback(() => {
     const el = audioRef.current;
@@ -155,9 +204,13 @@ export function MapPlayerProvider({ children }: { children: React.ReactNode }) {
     setPlaying(false);
     setProgress(0);
     setDuration(0);
+    setAudioReady(false);
+    pendingPlayRef.current = false;
     previewReqRef.current++;
     setPreviewNotes(null);
     setPreviewLoading(false);
+    setPreviewBuilding(false);
+    setWaypoints([]);
   }, []);
 
   const seek = useCallback((s: number) => {
@@ -196,12 +249,12 @@ export function MapPlayerProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<Ctx>(
     () => ({
       track, playing, progress, duration, volume, muted, hitsoundVolume,
-      previewNotes, previewLoading,
+      previewNotes, previewLoading, waypoints, phase,
       play, toggle, close, seek, setVolume, toggleMute, setHitsoundVolume,
       getCurrentTimeMs, getHitsoundVolume,
     }),
     [track, playing, progress, duration, volume, muted, hitsoundVolume,
-     previewNotes, previewLoading,
+     previewNotes, previewLoading, waypoints, phase,
      play, toggle, close, seek, setVolume, toggleMute, setHitsoundVolume,
      getCurrentTimeMs, getHitsoundVolume],
   );
@@ -306,7 +359,7 @@ function Slider({
 function PlayerWidget() {
   const {
     track, playing, progress, duration, volume, muted, hitsoundVolume,
-    previewNotes, previewLoading,
+    previewNotes, waypoints, phase,
     toggle, close, seek, setVolume, toggleMute, setHitsoundVolume,
     getCurrentTimeMs, getHitsoundVolume,
   } = usePlayer();
@@ -435,15 +488,19 @@ function PlayerWidget() {
         </div>
         {previewActive && (
           <div className="px-3 pb-3 border-t border-line/60 pt-3">
-            {previewNotes && previewNotes.length > 0 ? (
+            {phase === "ready" && previewNotes && previewNotes.length > 0 ? (
               <MapPreviewCanvas
                 notes={previewNotes}
+                waypoints={waypoints}
                 getTimeMs={getCurrentTimeMs}
                 getHitsoundVolume={getHitsoundVolume}
               />
             ) : (
               <div className="w-full aspect-video rounded flex items-center justify-center text-sm text-text-muted">
-                {previewLoading ? "loading notes…" : "no notes available"}
+                {phase === "audio" && "loading audio…"}
+                {phase === "notes" && "loading notes…"}
+                {phase === "building" && "calibrating autobot…"}
+                {phase === "ready" && (!previewNotes || previewNotes.length === 0) && "no notes available"}
               </div>
             )}
           </div>
