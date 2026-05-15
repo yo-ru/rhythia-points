@@ -78,7 +78,7 @@ async function main() {
   );
 
   const beatmaps = await prisma.beatmap.findMany({
-    select: { id: true, rankedAt: true },
+    select: { legacyMapId: true, rankedAt: true },
   });
   const now = Date.now();
   const hoursByMap = new Map<string, number>();
@@ -87,7 +87,7 @@ async function main() {
       b.rankedAt != null
         ? Math.max(1, Math.floor((now - b.rankedAt.getTime()) / 36e5))
         : 1;
-    hoursByMap.set(b.id, h);
+    hoursByMap.set(b.legacyMapId, h);
   }
 
   console.log("phase 2 · inserting variants with OW");

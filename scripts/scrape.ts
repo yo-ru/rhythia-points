@@ -87,7 +87,6 @@ async function persistScoresForPlayer(playerId: number, scores: RhythiaScore[]) 
     noteCount: number | null;
   };
   const beatmaps = new Map<string, MapPayload>();
-  // Variants keyed nomod here — enrich tags real mods later, derive rebuilds.
   const variants = new Map<string, { beatmapId: string; speed: number }>();
 
   for (const s of scores) {
@@ -107,8 +106,8 @@ async function persistScoresForPlayer(playerId: number, scores: RhythiaScore[]) 
   }
 
   await prisma.beatmap.createMany({
-    data: [...beatmaps.entries()].map(([id, m]) => ({
-      id,
+    data: [...beatmaps.entries()].map(([legacyMapId, m]) => ({
+      legacyMapId,
       title: m.title,
       difficulty: m.difficulty,
       noteCount: m.noteCount,
@@ -205,7 +204,6 @@ async function main() {
         await persistPlayer(user);
         const res = await rhythia.getUserScores({ id: user.id, limit: TOP_SCORES_PER_PLAYER });
         const top = res.top ?? [];
-        // Don't wipe an active player's scores on a transient empty response.
         if (top.length === 0 && typeof user.play_count === "number" && user.play_count > 0) {
           return;
         }

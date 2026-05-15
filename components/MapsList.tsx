@@ -91,7 +91,7 @@ export function MapsList({
   return (
     <div className="space-y-1.5">
       {rows.map((row) => (
-        <MapRow key={`${row.map.id}-${row.variant.id}`} row={row} />
+        <MapRow key={`${row.map.legacyMapId}-${row.variant.id}`} row={row} />
       ))}
 
       {hasMore && (

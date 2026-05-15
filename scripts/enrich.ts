@@ -53,11 +53,78 @@ function modsHas(mods: unknown, tag: ModTag): boolean {
   return mods.includes(tag);
 }
 
+async function fetchRange(url: string, start: number, end: number): Promise<Uint8Array | null> {
+  try {
+    const res = await fetch(url, { headers: { range: `bytes=${start}-${end}` }, cache: "no-store" });
+    if (!res.ok && res.status !== 206) return null;
+    return new Uint8Array(await res.arrayBuffer());
+  } catch {
+    return null;
+  }
+}
+
+async function checkSspmHasAudio(url: string): Promise<boolean | null> {
+  const buf = await fetchRange(url, 0, 4095);
+  if (!buf || buf.length < 8) return null;
+  if (buf[0] !== 0x53 || buf[1] !== 0x53 || buf[2] !== 0x2b || buf[3] !== 0x6d) return false;
+  const dv = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
+  const version = dv.getUint16(4, true);
+
+  if (version === 2) {
+    if (buf.length < 80) return null;
+    if (buf[45] !== 1) return false;
+    return Number(dv.getBigUint64(72, true)) > 0;
+  }
+
+  if (version === 1) {
+    let pos = 8;
+    for (let i = 0; i < 3; i++) {
+      const nl = buf.indexOf(0x0a, pos);
+      if (nl < 0) return null;
+      pos = nl + 1;
+    }
+    pos += 9; // last_ms + note_count + difficulty
+    if (pos >= buf.length) return null;
+    const coverType = buf[pos++]!;
+    let audioFlagOffset: number;
+    if (coverType === 0) {
+      audioFlagOffset = pos;
+    } else if (coverType === 1) {
+      if (pos + 14 > buf.length) return null;
+      const clen = Number(dv.getBigUint64(pos + 6, true));
+      audioFlagOffset = pos + 14 + clen;
+    } else if (coverType === 2) {
+      if (pos + 8 > buf.length) return null;
+      const clen = Number(dv.getBigUint64(pos, true));
+      audioFlagOffset = pos + 8 + clen;
+    } else {
+      return null;
+    }
+    let audioType: number | undefined;
+    if (audioFlagOffset < buf.length) {
+      audioType = buf[audioFlagOffset];
+    } else {
+      const flagBuf = await fetchRange(url, audioFlagOffset, audioFlagOffset);
+      if (!flagBuf || flagBuf.length < 1) return null;
+      audioType = flagBuf[0];
+    }
+    return audioType === 1;
+  }
+
+  return null;
+}
+
 async function main() {
   const startedAt = Date.now();
   const force = process.argv.includes("--force");
-  // image:null isn't in the OR — would re-trigger Deezer every run on maps
-  // that legitimately have no cover art. --force overrides.
+  const retryAudio = process.argv.includes("--retry-audio");
+  if (retryAudio) {
+    const r = await prisma.beatmap.updateMany({
+      where: { hasAudio: false },
+      data: { hasAudio: null },
+    });
+    console.log(`retry-audio · reset ${r.count} hasAudio=false → null for re-probe`);
+  }
   const where = force
     ? {}
     : {
@@ -65,12 +132,13 @@ async function main() {
           { rankedAt: null },
           { mapperId: null },
           { beatmapFile: null },
+          { hasAudio: null },
         ],
       };
 
   const beatmaps = await prisma.beatmap.findMany({
     where,
-    select: { id: true, title: true },
+    select: { legacyMapId: true, title: true },
     orderBy: [{ scores: { _count: "desc" } }],
     take: MAP_LIMIT,
   });
@@ -96,11 +164,11 @@ async function main() {
 
   await parallelMap(beatmaps, CONCURRENCY, async (bm, i) => {
     try {
-      const res = await rhythia.getBeatmapPageById({ mapId: bm.id, limit: 200 });
+      const res = await rhythia.getBeatmapPageById({ mapId: bm.legacyMapId, limit: 200 });
       const b = res.beatmap;
       if (!b) {
         failed += 1;
-        console.error(`  ! ${bm.id}: no beatmap in response`);
+        console.error(`  ! ${bm.legacyMapId}: no beatmap in response`);
         return;
       }
 
@@ -123,8 +191,7 @@ async function main() {
 
       let image: string | null = b.image && b.image !== "" ? b.image : null;
       if (!image) {
-        const title = b.title ?? bm.title;
-        const r = await lookupDeezerArt(title);
+        const r = await lookupDeezerArt(b.title ?? bm.title);
         if (r.kind === "hit") {
           image = r.url;
           artHits += 1;
@@ -142,10 +209,12 @@ async function main() {
         }
       }
 
+      const hasAudio = b.beatmapFile ? await checkSspmHasAudio(b.beatmapFile) : null;
+
       await prisma.beatmap.update({
-        where: { id: bm.id },
+        where: { legacyMapId: bm.legacyMapId },
         data: {
-          pageId: b.id,
+          mapId: b.id,
           title: b.title ?? bm.title,
           starRating: b.starRating ?? null,
           difficulty: b.difficulty ?? null,
@@ -153,6 +222,7 @@ async function main() {
           noteCount: b.noteCount ?? null,
           image,
           beatmapFile: b.beatmapFile ?? null,
+          hasAudio,
           rankedAt,
           mapperId: b.owner ?? null,
         },
@@ -192,7 +262,7 @@ async function main() {
       }
     } catch (err) {
       failed += 1;
-      console.error(`  ! ${bm.id}: ${(err as Error).message}`);
+      console.error(`  ! ${bm.legacyMapId}: ${(err as Error).message}`);
     }
     await sleep(DELAY_MS);
   });

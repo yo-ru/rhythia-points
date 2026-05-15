@@ -3,18 +3,18 @@
 import { useState } from "react";
 
 export function MapRowActions({
-  pageId,
+  mapId,
   beatmapFile,
 }: {
-  pageId: number | null;
+  mapId: number | null;
   beatmapFile: string | null;
 }) {
   const [copied, setCopied] = useState(false);
 
   async function copy() {
-    if (pageId == null) return;
+    if (mapId == null) return;
     try {
-      await navigator.clipboard.writeText(String(pageId));
+      await navigator.clipboard.writeText(String(mapId));
       setCopied(true);
       setTimeout(() => setCopied(false), 1200);
     } catch {
@@ -27,8 +27,8 @@ export function MapRowActions({
       <button
         type="button"
         onClick={copy}
-        disabled={pageId == null}
-        title={copied ? "Copied!" : pageId != null ? `Copy map id (${pageId})` : "No page id"}
+        disabled={mapId == null}
+        title={copied ? "Copied!" : mapId != null ? `Copy map id (${mapId})` : "No map id"}
         className="w-7 h-7 inline-flex items-center justify-center rounded border border-line text-text-dim hover:text-accent hover:border-accent bg-bg-elev disabled:opacity-30 disabled:hover:text-text-dim disabled:hover:border-line"
       >
         {copied ? (

@@ -9,7 +9,6 @@
   body {
     @apply min-h-screen;
   }
-  /* Links default to accent on hover, neutral by default. */
   a {
     @apply transition-colors;
   }
@@ -22,15 +21,6 @@
 }
 
 @layer components {
-  /* ── Mod badge ────────────────────────────────────────────────────────
-     Three states:
-       (no state class)  → OFF: gray, no fill. Used in filter for "forbidden"
-                                  and in rows for "this mod is not present".
-       .is-on            → ON: solid color fill. Filter "required", row "present".
-       .is-any           → ANY: diagonal split — top-left colored, bottom-right
-                                gray. Filter only (table cells are strictly
-                                binary).
-     Click cycle in filter: any → on → off → any. */
   .mod-badge {
     @apply relative inline-flex items-center justify-center rounded font-mono uppercase
            text-sm tracking-wider select-none cursor-pointer transition-colors;
@@ -42,13 +32,6 @@
   }
   .mod-badge > span { @apply relative z-10; }
 
-  /* PNG icon visibility:
-       on / any state    → coloured bg, render PNG as-is (black outlines pop
-                            against orange / red / purple bgs)
-       off state         → dark bg, invert the icon so the outline reads as
-                            light grey instead of disappearing into the bg.
-                            Bar colours get hue-shifted as a side effect but
-                            that's fine — the filter is disabled anyway. */
   .mod-icon-png {
     image-rendering: -webkit-optimize-contrast;
   }
@@ -56,7 +39,6 @@
     filter: invert(1) brightness(0.85);
     opacity: 0.8;
   }
-  /* NM text follows the same colour story as the PNG outline in off state. */
   .mod-badge .mod-nm-text { color: #b9b8af; }
   .mod-badge.is-on .mod-nm-text { color: #ffffff; }
 
@@ -64,10 +46,6 @@
   .mod-badge.is-on.mod-hr    { background: #ef5a6f; color: #ffffff; border-color: #ef5a6f; }
   .mod-badge.is-on.mod-gh    { background: #a06ad4; color: #ffffff; border-color: #a06ad4; }
 
-  /* "Any" — diagonal split using a hard 50% stop so the seam is crisp,
-     not a 1px anti-aliased blur. Border stays a single solid color so the
-     badge doesn't get a ragged edge where the gradient meets the rounded
-     corners. */
   .mod-badge.is-any { color: #ffffff; }
   .mod-badge.is-any.mod-speed {
     background: linear-gradient(135deg, #c98a3a 50%, #2a2a33 50%);
@@ -82,29 +60,12 @@
     border-color: #4a2870;
   }
 
-  /* ── Pills used in the right side of map rows. */
   .pill {
     @apply inline-flex items-center justify-center px-2.5 h-8 rounded text-sm font-mono;
     min-width: 64px;
   }
 
-  /* ── Bar chart row used on /mappers and /rankings. */
-  .bar-track {
-    @apply relative h-7 rounded bg-bg-row overflow-hidden;
-  }
-  .bar-fill {
-    @apply absolute inset-y-0 left-0 transition-all;
-  }
-
-  /* ── Maps grid ────────────────────────────────────────────────────────
-     Shared column template so the filter bar and every map row line up.
-     Columns:
-       1 cover (80)  · 2 title (1fr)  · 3 RP (140)  · 4 speed (64)
-       5 HR (50)     · 6 GH (50)      · 7 length (140)
-       8 BPM (140)   · 9 stars (140)  · 10 count (60) */
   .maps-grid {
-    /* cover | title | RP | speed | HR | GH | length | stars | OW | samples
-       OW + samples sit together at the right edge as a "stats" pair. */
     display: grid;
     grid-template-columns:
       80px
@@ -120,8 +81,6 @@
     column-gap: 8px;
     align-items: center;
   }
-  /* Filter pair (label + 2 narrow inputs). Fixed input widths + center
-     justification so the pair sits visually above its data column. */
   .filter-pair {
     @apply flex items-center justify-center gap-1 min-w-0;
   }
@@ -135,8 +94,6 @@
 }
 
 @layer base {
-  /* Strip the native ↑/↓ spinners from number inputs — they're noisy in a
-     dense filter grid and we never want users mashing them. */
   input[type="number"]::-webkit-outer-spin-button,
   input[type="number"]::-webkit-inner-spin-button {
     -webkit-appearance: none;

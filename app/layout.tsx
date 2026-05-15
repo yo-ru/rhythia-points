@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Concert_One } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/Header";
+import { MapPlayerProvider } from "@/components/MapPlayer";
 import { getSiteSummary } from "@/lib/counts";
 
 const displayFont = Concert_One({
@@ -48,11 +49,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className={displayFont.variable}>
-        <Header />
-        <main className="max-w-7xl mx-auto px-4 py-6">{children}</main>
-        <footer className="max-w-7xl mx-auto px-4 py-10 text-xs text-text-muted">
-          rhythia-points · data derived from the upstream Rhythia API. Not affiliated with Rhythia.
-        </footer>
+        <MapPlayerProvider>
+          <Header />
+          <main className="max-w-7xl mx-auto px-4 py-6">{children}</main>
+          <footer className="max-w-7xl mx-auto px-4 py-10 text-xs text-text-muted">
+            rhythia-points · data derived from the upstream Rhythia API. Not affiliated with Rhythia.
+          </footer>
+        </MapPlayerProvider>
       </body>
     </html>
   );

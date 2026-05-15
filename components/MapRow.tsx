@@ -7,10 +7,11 @@ import { HardrockIcon } from "@/components/icons/HardrockIcon";
 import { GhostIcon } from "@/components/icons/GhostIcon";
 import { SpeedIcon } from "@/components/icons/SpeedIcon";
 import { MapRowActions } from "@/components/MapRowActions";
+import { usePlayer } from "@/components/MapPlayer";
 
 export function MapRow({ row }: { row: MapRowData }) {
-  const mapUrl = row.map.pageId != null
-    ? `https://www.rhythia.com/maps/${row.map.pageId}`
+  const mapUrl = row.map.mapId != null
+    ? `https://www.rhythia.com/maps/${row.map.mapId}`
     : null;
   return (
     <>
@@ -25,7 +26,15 @@ function DesktopRow({ row, mapUrl }: { row: MapRowData; mapUrl: string | null })
   const effectiveLength = map.length != null ? Math.round(map.length / variant.speed) : null;
   return (
     <div className="group relative maps-grid bg-bg-elev border border-line hover:border-line/80 hover:bg-bg-row rounded-lg overflow-hidden transition-colors min-h-[60px] hidden md:grid">
-      <Cover title={map.title} image={map.image} />
+      <Cover
+        mapId={map.mapId}
+        trackId={`${map.legacyMapId}|${variant.id}`}
+        title={map.title}
+        mapper={map.mapper?.username ?? null}
+        image={map.image}
+        hasAudio={map.hasAudio === true && map.mapId != null}
+        variantSpeed={variant.speed}
+      />
 
       <div className="min-w-0 py-1.5 px-2 flex items-center gap-3">
         <div className="min-w-0">
@@ -53,7 +62,7 @@ function DesktopRow({ row, mapUrl }: { row: MapRowData; mapUrl: string | null })
             )}
           </div>
         </div>
-        <MapRowActions pageId={map.pageId} beatmapFile={map.beatmapFile} />
+        <MapRowActions mapId={map.mapId} beatmapFile={map.beatmapFile} />
       </div>
 
       <div className="text-center whitespace-nowrap">
@@ -97,7 +106,16 @@ function MobileRow({ row, mapUrl }: { row: MapRowData; mapUrl: string | null }) 
   const effectiveLength = map.length != null ? Math.round(map.length / variant.speed) : null;
   return (
     <div className="md:hidden bg-bg-elev border border-line rounded-lg overflow-hidden flex">
-      <Cover title={map.title} image={map.image} mobile />
+      <Cover
+        mapId={map.mapId}
+        trackId={`${map.legacyMapId}|${variant.id}`}
+        title={map.title}
+        mapper={map.mapper?.username ?? null}
+        image={map.image}
+        hasAudio={map.hasAudio === true && map.mapId != null}
+        variantSpeed={variant.speed}
+        mobile
+      />
       <div className="flex-1 min-w-0 p-2.5 flex flex-col gap-1.5">
         <div className="flex items-start gap-2">
           <div className="flex-1 min-w-0">
@@ -116,7 +134,7 @@ function MobileRow({ row, mapUrl }: { row: MapRowData; mapUrl: string | null }) 
               </span>
             )}
           </div>
-          <MapRowActions pageId={map.pageId} beatmapFile={map.beatmapFile} />
+          <MapRowActions mapId={map.mapId} beatmapFile={map.beatmapFile} />
         </div>
 
         <div className="text-xs text-text-muted truncate">
@@ -163,15 +181,26 @@ function MobileRow({ row, mapUrl }: { row: MapRowData; mapUrl: string | null }) 
 }
 
 function Cover({
+  mapId,
+  trackId,
   title,
+  mapper,
   image,
+  hasAudio,
+  variantSpeed,
   mobile = false,
 }: {
+  mapId: number | null;
+  trackId: string;
   title: string;
+  mapper: string | null;
   image: string | null;
+  hasAudio: boolean;
+  variantSpeed: number;
   mobile?: boolean;
 }) {
   const [failed, setFailed] = useState(false);
+  const audio = usePlayer();
   let hash = 0;
   for (let i = 0; i < title.length; i++) hash = (hash * 31 + title.charCodeAt(i)) | 0;
   const hue = Math.abs(hash) % 360;
@@ -182,6 +211,13 @@ function Cover({
   const wrapper = mobile
     ? "w-24 self-stretch shrink-0 relative overflow-hidden flex items-end p-1.5 text-[10px] font-mono text-white/40 select-none"
     : "self-stretch relative overflow-hidden flex items-end p-2 text-xs font-mono text-white/40 select-none";
+
+  const isActiveTrack = audio.track?.id === trackId;
+  const isPlayingThis = isActiveTrack && audio.playing;
+  const overlayClass = isActiveTrack
+    ? "opacity-100"
+    : "opacity-100 md:opacity-0 md:group-hover:opacity-100";
+
   return (
     <div className={wrapper} style={fallbackStyle}>
       {safeUrl && (
@@ -198,7 +234,74 @@ function Cover({
       {!safeUrl && (
         <span className="relative truncate">{title.slice(0, 3).toUpperCase()}</span>
       )}
+
+      {hasAudio && mapId != null && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            audio.play({
+              id: trackId,
+              title,
+              mapper,
+              cover: image,
+              src: `/api/audio/${mapId}`,
+              speed: variantSpeed,
+              previewMapId: mapId,
+            });
+          }}
+          aria-label={isPlayingThis ? "Pause preview" : "Play preview"}
+          className={`absolute inset-0 items-center justify-center bg-black/30 transition-opacity flex ${overlayClass}`}
+        >
+          <PlayOverlay playing={isPlayingThis} progress={isActiveTrack && audio.duration > 0 ? audio.progress / audio.duration : 0} compact={mobile} />
+        </button>
+      )}
     </div>
+  );
+}
+
+function PlayOverlay({ playing, progress, compact }: { playing: boolean; progress: number; compact: boolean }) {
+  const size = compact ? 36 : 44;
+  const stroke = 3;
+  const r = size / 2 - stroke;
+  const c = 2 * Math.PI * r;
+  const dash = c * Math.max(0, Math.min(1, progress));
+  return (
+    <span className="relative inline-flex items-center justify-center" style={{ width: size, height: size }}>
+      <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} className="absolute inset-0">
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          stroke="rgba(255,255,255,0.25)"
+          strokeWidth={stroke}
+        />
+        {progress > 0 && (
+          <circle
+            cx={size / 2}
+            cy={size / 2}
+            r={r}
+            fill="none"
+            stroke="#f5d042"
+            strokeWidth={stroke}
+            strokeLinecap="round"
+            strokeDasharray={`${dash} ${c}`}
+            transform={`rotate(-90 ${size / 2} ${size / 2})`}
+          />
+        )}
+      </svg>
+      {playing ? (
+        <svg width={compact ? 14 : 18} height={compact ? 14 : 18} viewBox="0 0 24 24" fill="#f5d042" className="relative">
+          <path d="M6 5h4v14H6zM14 5h4v14h-4z" />
+        </svg>
+      ) : (
+        <svg width={compact ? 14 : 18} height={compact ? 14 : 18} viewBox="0 0 24 24" fill="#f5d042" className="relative ml-0.5">
+          <path d="M8 5v14l11-7z" />
+        </svg>
+      )}
+    </span>
   );
 }
 

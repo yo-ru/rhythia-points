@@ -22,8 +22,8 @@ export type BeatmapVariant = {
 };
 
 export type Beatmap = {
-  id: string;
-  pageId: number | null;
+  legacyMapId: string;
+  mapId: number | null;
   title: string;
   starRating: number | null;
   difficulty: number | null;
@@ -31,6 +31,7 @@ export type Beatmap = {
   noteCount: number | null;
   image: string | null;
   beatmapFile: string | null;
+  hasAudio: boolean | null;
   rankedAt: string | null;
   mapper: { id: number; username: string } | null;
   variants: BeatmapVariant[];

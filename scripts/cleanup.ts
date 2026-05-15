@@ -27,11 +27,10 @@ async function findDuplicateBeatmapGroups(): Promise<DupGroup[]> {
 }
 
 async function pickCanonicalAndDups(group: DupGroup): Promise<{ canonical: string; dups: string[] }> {
-  // Canonical = most scores, tiebreak on having rankedAt/image/beatmapFile, then id.
   const rows = await prisma.beatmap.findMany({
-    where: { id: { in: group.ids } },
+    where: { legacyMapId: { in: group.ids } },
     select: {
-      id: true,
+      legacyMapId: true,
       rankedAt: true,
       image: true,
       beatmapFile: true,
@@ -43,11 +42,11 @@ async function pickCanonicalAndDups(group: DupGroup): Promise<{ canonical: strin
     const am = (a.rankedAt ? 1 : 0) + (a.image ? 1 : 0) + (a.beatmapFile ? 1 : 0);
     const bm = (b.rankedAt ? 1 : 0) + (b.image ? 1 : 0) + (b.beatmapFile ? 1 : 0);
     if (am !== bm) return bm - am;
-    return a.id.localeCompare(b.id);
+    return a.legacyMapId.localeCompare(b.legacyMapId);
   });
   return {
-    canonical: ranked[0]!.id,
-    dups: ranked.slice(1).map((r) => r.id),
+    canonical: ranked[0]!.legacyMapId,
+    dups: ranked.slice(1).map((r) => r.legacyMapId),
   };
 }
 
@@ -71,9 +70,6 @@ async function main() {
   const orphanMapCount = Number(orphanMaps[0]?.count ?? 0n);
   console.log(`  ${orphanMapCount} Beatmap rows with no scores referencing them`);
 
-  // Players with lastPlayCount set but no scores left (mid-scrape failure
-  // or all their maps got cleaned up). Untouched rows (lastPlayCount=null)
-  // are healthy phase-1 upserts awaiting their first score fetch.
   const orphanPlayers = await prisma.$queryRaw<Array<{ count: bigint }>>`
     SELECT COUNT(*)::bigint AS count
     FROM "Player" p

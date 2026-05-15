@@ -42,8 +42,6 @@ export async function queryMaps(filters: MapsFilters): Promise<{ rows: MapRow[];
     variantWhere.avgRp = { ...(variantWhere.avgRp as object), lte: filters.rpMax };
   }
 
-  // Length filter is on effective length (= raw / speed). Per-speed OR clauses
-  // map the user range to a raw-length range so Prisma can evaluate per variant.
   let lengthOrClauses: Prisma.BeatmapVariantWhereInput[] | undefined;
   if (filters.lengthMin != null || filters.lengthMax != null) {
     lengthOrClauses = SPEED_OPTIONS.map((speed) => {
@@ -91,8 +89,8 @@ function toBeatmap(b: Prisma.BeatmapGetPayload<{
   include: { mapper: { select: { id: true; username: true } }; variants: true };
 }>): Beatmap {
   return {
-    id: b.id,
-    pageId: b.pageId,
+    legacyMapId: b.legacyMapId,
+    mapId: b.mapId,
     title: b.title,
     starRating: b.starRating,
     difficulty: b.difficulty,
@@ -100,6 +98,7 @@ function toBeatmap(b: Prisma.BeatmapGetPayload<{
     noteCount: b.noteCount,
     image: b.image,
     beatmapFile: b.beatmapFile,
+    hasAudio: b.hasAudio,
     rankedAt: b.rankedAt ? b.rankedAt.toISOString() : null,
     mapper: b.mapper ?? null,
     variants: b.variants.map((v) => toVariant(v)),

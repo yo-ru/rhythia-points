@@ -51,7 +51,6 @@ function TextFilter({
   );
 }
 
-// HR/GH are parked — re-enable by restoring the popover JSX in the filter grid.
 type Tri = "any" | "on" | "off";
 const TRI_ORDER: Tri[] = ["any", "on", "off"];
 
@@ -382,8 +381,6 @@ function TimeFilterPair({
   onMin: (v: string) => void;
   onMax: (v: string) => void;
 }) {
-  // Local text keeps partial input like "1:" alive; lastCommitted refs
-  // distinguish our own URL writes from external resets.
   const [minText, setMinText] = useState(() => formatTimeInput(Number(minSec) || null));
   const [maxText, setMaxText] = useState(() => formatTimeInput(Number(maxSec) || null));
   const minTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
