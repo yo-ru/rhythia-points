@@ -23,7 +23,23 @@ export async function Header() {
         </div>
         <div className="flex flex-col sm:items-end gap-2 sm:gap-1">
           <div
-            className="text-xs sm:text-sm text-text-dim leading-tight"
+            className="hidden sm:block text-sm text-text-dim leading-tight"
+            title={updated ? `Last refreshed ${lastRefreshedAt}` : undefined}
+          >
+            <span className="text-text font-mono">{maps.toLocaleString()}</span> farm maps
+            {" across "}
+            <span className="text-text font-mono">{scores.toLocaleString()}</span> scores
+            {" from "}
+            <span className="text-text font-mono">{players.toLocaleString()}</span> players
+            {updated && (
+              <>
+                {" · "}
+                updated <span className="text-text">{updated}</span>
+              </>
+            )}
+          </div>
+          <div
+            className="sm:hidden text-xs text-text-dim leading-tight"
             title={updated ? `Last refreshed ${lastRefreshedAt}` : undefined}
           >
             <span className="text-text font-mono">{maps.toLocaleString()}</span> maps
