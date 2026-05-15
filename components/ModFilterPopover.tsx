@@ -14,9 +14,18 @@ export function ModFilterPopover<V extends string>({
   renderOption: (value: V) => React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const [isTouch, setIsTouch] = useState(false);
   const [offsetX, setOffsetX] = useState(0);
   const ref = useRef<HTMLDivElement | null>(null);
   const panelRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(hover: none)");
+    setIsTouch(mq.matches);
+    const onChange = (e: MediaQueryListEvent) => setIsTouch(e.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
 
   useEffect(() => {
     if (!open) return;
@@ -47,12 +56,21 @@ export function ModFilterPopover<V extends string>({
     setOffsetX(shift);
   }, [open, options.length]);
 
+  const handleCapture: React.MouseEventHandler<HTMLDivElement> = (e) => {
+    if (!isTouch) return;
+    if (panelRef.current && panelRef.current.contains(e.target as Node)) return;
+    e.stopPropagation();
+    e.preventDefault();
+    setOpen((o) => !o);
+  };
+
   return (
     <div
       ref={ref}
       className="relative justify-self-center"
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
+      onMouseEnter={isTouch ? undefined : () => setOpen(true)}
+      onMouseLeave={isTouch ? undefined : () => setOpen(false)}
+      onClickCapture={handleCapture}
     >
       {trigger}
       {open && (
@@ -69,7 +87,8 @@ export function ModFilterPopover<V extends string>({
               <button
                 key={v}
                 type="button"
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
                   onSelect(v);
                   setOpen(false);
                 }}

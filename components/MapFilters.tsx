@@ -178,6 +178,20 @@ export function MapFilters() {
           <div className="justify-self-center"><ModBadge kind="hr" tri="any" disabled /></div>
           <div className="justify-self-center"><ModBadge kind="gh" tri="any" disabled /></div>
         </div>
+        <MobileRangeRow
+          label="RP"
+          minVal={current.rpMin} maxVal={current.rpMax}
+          onMin={(v) => update({ rpMin: v })} onMax={(v) => update({ rpMax: v })}
+        />
+        <MobileTimeRow
+          minSec={current.lenMin} maxSec={current.lenMax}
+          onMin={(v) => update({ lenMin: v })} onMax={(v) => update({ lenMax: v })}
+        />
+        <MobileRangeRow
+          label="★" step="0.01"
+          minVal={current.starMin} maxVal={current.starMax}
+          onMin={(v) => update({ starMin: v })} onMax={(v) => update({ starMax: v })}
+        />
         <div className="grid grid-cols-2 gap-2">
           <label className="flex flex-col gap-1">
             <span className="text-xs uppercase tracking-wider text-text-muted">sort</span>
@@ -567,5 +581,97 @@ function SpeedBadge({
         <SpeedIcon speed={isAny ? 1.25 : (speed as number)} size={22} />
       </span>
     </span>
+  );
+}
+
+const MOBILE_INPUT_CLASS =
+  "flex-1 min-w-0 text-sm py-1.5 px-2 text-center bg-bg-elev border border-line rounded placeholder:text-text-muted focus:outline-none focus:border-accent";
+
+function MobileRangeRow({
+  label, step,
+  minVal, maxVal, onMin, onMax,
+}: {
+  label: string;
+  step?: string;
+  minVal: string;
+  maxVal: string;
+  onMin: (v: string) => void;
+  onMax: (v: string) => void;
+}) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="w-8 shrink-0 text-xs uppercase tracking-wider text-text-muted">{label}</span>
+      <TextFilter
+        type="number" inputMode="decimal" step={step ?? "1"} placeholder="min"
+        className={MOBILE_INPUT_CLASS}
+        value={minVal} onCommit={onMin}
+      />
+      <TextFilter
+        type="number" inputMode="decimal" step={step ?? "1"} placeholder="max"
+        className={MOBILE_INPUT_CLASS}
+        value={maxVal} onCommit={onMax}
+      />
+    </div>
+  );
+}
+
+function MobileTimeRow({
+  minSec, maxSec, onMin, onMax,
+}: {
+  minSec: string;
+  maxSec: string;
+  onMin: (v: string) => void;
+  onMax: (v: string) => void;
+}) {
+  const [minText, setMinText] = useState(() => formatTimeInput(Number(minSec) || null));
+  const [maxText, setMaxText] = useState(() => formatTimeInput(Number(maxSec) || null));
+  const minTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const maxTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const onMinRef = useRef(onMin);
+  const onMaxRef = useRef(onMax);
+  useEffect(() => { onMinRef.current = onMin; });
+  useEffect(() => { onMaxRef.current = onMax; });
+
+  useEffect(() => setMinText(formatTimeInput(Number(minSec) || null)), [minSec]);
+  useEffect(() => setMaxText(formatTimeInput(Number(maxSec) || null)), [maxSec]);
+  useEffect(() => () => {
+    if (minTimer.current) clearTimeout(minTimer.current);
+    if (maxTimer.current) clearTimeout(maxTimer.current);
+  }, []);
+
+  function handle(
+    next: string,
+    setter: (v: string) => void,
+    timerRef: React.MutableRefObject<ReturnType<typeof setTimeout> | null>,
+    commitRef: React.MutableRefObject<(v: string) => void>,
+  ) {
+    setter(next);
+    if (timerRef.current) clearTimeout(timerRef.current);
+    if (next === "") {
+      timerRef.current = setTimeout(() => { timerRef.current = null; commitRef.current(""); }, 250);
+      return;
+    }
+    const sec = parseTimeInput(next);
+    if (sec != null) {
+      timerRef.current = setTimeout(() => { timerRef.current = null; commitRef.current(String(sec)); }, 250);
+    }
+  }
+
+  return (
+    <div className="flex items-center gap-2">
+      <span className="w-8 shrink-0 text-xs uppercase tracking-wider text-text-muted">⏱</span>
+      <input
+        type="text" inputMode="numeric" placeholder="0:00"
+        className={MOBILE_INPUT_CLASS}
+        value={minText}
+        onChange={(e) => handle(e.target.value, setMinText, minTimer, onMinRef)}
+      />
+      <input
+        type="text" inputMode="numeric" placeholder="0:00"
+        className={MOBILE_INPUT_CLASS}
+        value={maxText}
+        onChange={(e) => handle(e.target.value, setMaxText, maxTimer, onMaxRef)}
+      />
+    </div>
   );
 }

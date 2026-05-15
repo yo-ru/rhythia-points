@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import { SpeedIcon } from "@/components/icons/SpeedIcon";
 import type { SspmNote } from "@/lib/sspm";
 import { MapPreviewCanvas } from "@/components/MapPreviewCanvas";
@@ -208,9 +209,20 @@ export function MapPlayerProvider({ children }: { children: React.ReactNode }) {
   return (
     <PlayerCtx.Provider value={value}>
       {children}
-      {track && <PlayerWidget />}
+      {track && <PlayerWidgetGate />}
     </PlayerCtx.Provider>
   );
+}
+
+function PlayerWidgetGate() {
+  const pathname = usePathname();
+  const { close } = usePlayer();
+  const onMaps = pathname === "/" || pathname === "/maps" || pathname?.startsWith("/maps/");
+  useEffect(() => {
+    if (!onMaps) close();
+  }, [onMaps, close]);
+  if (!onMaps) return null;
+  return <PlayerWidget />;
 }
 
 function Slider({
@@ -378,7 +390,7 @@ function PlayerWidget() {
           >
             {effectiveVolume === 0 ? <VolumeMutedIcon /> : <VolumeIcon />}
           </button>
-          <div className="overflow-hidden transition-[max-width] duration-200 ease-out max-w-0 group-hover/vol:max-w-[6rem] focus-within:max-w-[6rem]">
+          <div className="overflow-x-hidden overflow-y-visible flex items-center h-4 transition-[max-width] duration-200 ease-out max-w-0 group-hover/vol:max-w-[6rem] focus-within:max-w-[6rem]">
             <div className="w-20 px-1.5">
               <Slider value={effectiveVolume} onChange={setVolume} ariaLabel="Volume" />
             </div>
@@ -394,7 +406,7 @@ function PlayerWidget() {
             >
               <HitsoundIcon />
             </span>
-            <div className="overflow-hidden transition-[max-width] duration-200 ease-out max-w-0 group-hover/hsv:max-w-[6rem] focus-within:max-w-[6rem]">
+            <div className="overflow-x-hidden overflow-y-visible flex items-center h-4 transition-[max-width] duration-200 ease-out max-w-0 group-hover/hsv:max-w-[6rem] focus-within:max-w-[6rem]">
               <div className="w-20 px-1.5">
                 <Slider value={hitsoundVolume} onChange={setHitsoundVolume} ariaLabel="Hitsound volume" />
               </div>
