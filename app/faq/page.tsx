@@ -9,8 +9,7 @@ export default function FaqPage() {
           <li>
             Add up how often it appears in player top 100s, weighted by position.
             A player&apos;s #1 score contributes 1.0; #10 contributes ~0.43; #50
-            contributes ~0.015. Geometric decay so the long tail of someone&apos;s
-            top-100 still counts.
+            contributes ~0.015.
           </li>
           <li>
             Divide by how many players play at that map&apos;s RP level, so popular
