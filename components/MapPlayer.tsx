@@ -9,6 +9,8 @@ import type { Waypoint } from "@/components/MapPreviewCanvas";
 
 type Phase = "audio" | "notes" | "building" | "ready";
 
+const MIN_PHASE_MS = 600;
+
 type Track = {
   id: string;
   title: string;
@@ -137,6 +139,7 @@ export function MapPlayerProvider({ children }: { children: React.ReactNode }) {
     setDuration(0);
     setAudioReady(false);
     setPlaying(false);
+    setPhase(null);
     pendingPlayRef.current = true;
     if (t.previewMapId != null) {
       loadPreviewNotes(t.previewMapId);
@@ -163,7 +166,7 @@ export function MapPlayerProvider({ children }: { children: React.ReactNode }) {
     return () => cancelAnimationFrame(id);
   }, [previewNotes]);
 
-  const phase: Phase | null = useMemo(() => {
+  const targetPhase: Phase | null = useMemo(() => {
     if (!track) return null;
     if (!audioReady) return "audio";
     if (track.previewMapId != null) {
@@ -172,6 +175,32 @@ export function MapPlayerProvider({ children }: { children: React.ReactNode }) {
     }
     return "ready";
   }, [track, audioReady, previewLoading, previewNotes, previewBuilding]);
+
+  const [phase, setPhase] = useState<Phase | null>(null);
+  const phaseStartedAtRef = useRef(0);
+
+  useEffect(() => {
+    const order: Phase[] = track?.previewMapId != null
+      ? ["audio", "notes", "building", "ready"]
+      : ["audio", "ready"];
+    if (targetPhase === null) { setPhase(null); return; }
+    if (phase === null) {
+      setPhase(order[0]!);
+      phaseStartedAtRef.current = performance.now();
+      return;
+    }
+    if (phase === targetPhase) return;
+    const curIdx = order.indexOf(phase);
+    const tgtIdx = order.indexOf(targetPhase);
+    if (curIdx < 0 || tgtIdx <= curIdx) return;
+    const elapsed = performance.now() - phaseStartedAtRef.current;
+    const wait = Math.max(0, MIN_PHASE_MS - elapsed);
+    const id = setTimeout(() => {
+      setPhase(order[curIdx + 1]!);
+      phaseStartedAtRef.current = performance.now();
+    }, wait);
+    return () => clearTimeout(id);
+  }, [phase, targetPhase, track]);
 
   useEffect(() => {
     if (phase === "ready" && pendingPlayRef.current) {
@@ -205,6 +234,7 @@ export function MapPlayerProvider({ children }: { children: React.ReactNode }) {
     setProgress(0);
     setDuration(0);
     setAudioReady(false);
+    setPhase(null);
     pendingPlayRef.current = false;
     previewReqRef.current++;
     setPreviewNotes(null);
@@ -496,12 +526,7 @@ function PlayerWidget() {
                 getHitsoundVolume={getHitsoundVolume}
               />
             ) : (
-              <div className="w-full aspect-video rounded flex items-center justify-center text-sm text-text-muted">
-                {phase === "audio" && "loading audio…"}
-                {phase === "notes" && "loading notes…"}
-                {phase === "building" && "calibrating autobot…"}
-                {phase === "ready" && (!previewNotes || previewNotes.length === 0) && "no notes available"}
-              </div>
+              <LoadingPanel phase={phase} hasNotes={previewNotes != null && previewNotes.length > 0} />
             )}
           </div>
         )}
@@ -515,6 +540,29 @@ function fmt(s: number): string {
   const m = Math.floor(s / 60);
   const sec = Math.floor(s % 60);
   return `${m}:${sec.toString().padStart(2, "0")}`;
+}
+
+function LoadingPanel({ phase, hasNotes }: { phase: Phase | null; hasNotes: boolean }) {
+  const steps: Phase[] = ["audio", "notes", "building"];
+  const stepIdx = phase === null || phase === "ready" ? steps.length : steps.indexOf(phase);
+  const progress = stepIdx / steps.length;
+  const msg =
+    phase === "audio" ? "loading audio…" :
+    phase === "notes" ? "loading notes…" :
+    phase === "building" ? "calibrating autobot…" :
+    phase === "ready" && !hasNotes ? "no notes available" :
+    "";
+  return (
+    <div className="w-full aspect-video rounded flex flex-col items-center justify-center gap-4 text-sm text-text-muted">
+      <div>{msg}</div>
+      <div className="w-56 h-1 rounded-full bg-bg-row overflow-hidden">
+        <div
+          className="h-full bg-accent rounded-full transition-[width] duration-500 ease-out"
+          style={{ width: `${progress * 100}%` }}
+        />
+      </div>
+    </div>
+  );
 }
 
 function PlayIcon() {
