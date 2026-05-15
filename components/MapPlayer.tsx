@@ -7,7 +7,7 @@ import type { SspmNote } from "@/lib/sspm";
 import { MapPreviewCanvas, buildWaypoints } from "@/components/MapPreviewCanvas";
 import type { Waypoint } from "@/components/MapPreviewCanvas";
 
-type Phase = "audio" | "notes" | "building" | "ready";
+type Phase = "audio" | "notes" | "building" | "done" | "ready";
 
 const MIN_PHASE_MS = 600;
 
@@ -176,31 +176,36 @@ export function MapPlayerProvider({ children }: { children: React.ReactNode }) {
     return "ready";
   }, [track, audioReady, previewLoading, previewNotes, previewBuilding]);
 
+  const phaseOrder: Phase[] = useMemo(() =>
+    track?.previewMapId != null
+      ? ["audio", "notes", "building", "done", "ready"]
+      : ["audio", "ready"],
+    [track?.previewMapId]);
+
   const [phase, setPhase] = useState<Phase | null>(null);
   const phaseStartedAtRef = useRef(0);
 
   useEffect(() => {
-    const order: Phase[] = track?.previewMapId != null
-      ? ["audio", "notes", "building", "ready"]
-      : ["audio", "ready"];
     if (targetPhase === null) { setPhase(null); return; }
     if (phase === null) {
-      setPhase(order[0]!);
+      setPhase(phaseOrder[0]!);
       phaseStartedAtRef.current = performance.now();
       return;
     }
-    if (phase === targetPhase) return;
-    const curIdx = order.indexOf(phase);
-    const tgtIdx = order.indexOf(targetPhase);
-    if (curIdx < 0 || tgtIdx <= curIdx) return;
+    if (phase === "ready") return;
+    const curIdx = phaseOrder.indexOf(phase);
+    const tgtIdx = phaseOrder.indexOf(targetPhase);
+    const lastIdx = phaseOrder.length - 1;
+    const advanceIdx = targetPhase === "ready" ? lastIdx : tgtIdx;
+    if (curIdx < 0 || advanceIdx <= curIdx) return;
     const elapsed = performance.now() - phaseStartedAtRef.current;
     const wait = Math.max(0, MIN_PHASE_MS - elapsed);
     const id = setTimeout(() => {
-      setPhase(order[curIdx + 1]!);
+      setPhase(phaseOrder[curIdx + 1]!);
       phaseStartedAtRef.current = performance.now();
     }, wait);
     return () => clearTimeout(id);
-  }, [phase, targetPhase, track]);
+  }, [phase, targetPhase, phaseOrder]);
 
   useEffect(() => {
     if (phase === "ready" && pendingPlayRef.current) {
@@ -544,17 +549,21 @@ function fmt(s: number): string {
 
 function LoadingPanel({ phase, hasNotes }: { phase: Phase | null; hasNotes: boolean }) {
   const steps: Phase[] = ["audio", "notes", "building"];
-  const stepIdx = phase === null || phase === "ready" ? steps.length : steps.indexOf(phase);
-  const progress = stepIdx / steps.length;
+  const progress =
+    phase === "done" || phase === "ready" ? 1 :
+    phase == null ? 0 :
+    Math.max(0, steps.indexOf(phase)) / steps.length;
   const msg =
     phase === "audio" ? "loading audio…" :
     phase === "notes" ? "loading notes…" :
     phase === "building" ? "calibrating autobot…" :
+    phase === "done" ? "done!" :
     phase === "ready" && !hasNotes ? "no notes available" :
     "";
+  const isDone = phase === "done";
   return (
     <div className="w-full aspect-video rounded flex flex-col items-center justify-center gap-4 text-sm text-text-muted">
-      <div>{msg}</div>
+      <div className={isDone ? "text-accent" : undefined}>{msg}</div>
       <div className="w-56 h-1 rounded-full bg-bg-row overflow-hidden">
         <div
           className="h-full bg-accent rounded-full transition-[width] duration-500 ease-out"
