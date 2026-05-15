@@ -16,8 +16,7 @@ export default function FaqPage() {
             difficulty bands don&apos;t dominate.
           </li>
           <li>
-            Divide by log(hours since the map was last updated). Old farms get a
-            gentle nudge down, not a heavy penalty.
+            Divide by log(hours since the map was last updated).
           </li>
         </ol>
         <p className="mt-2">
@@ -45,12 +44,6 @@ export default function FaqPage() {
         <p>
           Once a week, Sunday 03:00 UTC. The &ldquo;updated&rdquo; timestamp in the
           header reflects when the last refresh finished.
-        </p>
-        <p className="mt-2">
-          Within a single refresh, players whose play count hasn&apos;t changed since
-          the previous run are skipped &mdash; their top 100 is necessarily identical, so
-          there&apos;s nothing to re-fetch. That keeps the weekly cost roughly proportional
-          to how many people actually played, not to the total leaderboard size.
         </p>
       </Section>
 
