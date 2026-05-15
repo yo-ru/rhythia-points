@@ -2,11 +2,11 @@ export const SPEED_OPTIONS = [0.75, 0.8, 0.87, 1.0, 1.15, 1.25, 1.35, 1.45] as c
 export type Speed = (typeof SPEED_OPTIONS)[number];
 
 export const DATE_WINDOWS = [
-  { key: "1w", label: "Last week", days: 7 },
-  { key: "1m", label: "Last month", days: 30 },
-  { key: "3m", label: "Last 3 months", days: 90 },
-  { key: "6m", label: "Last 6 months", days: 180 },
-  { key: "1y", label: "Last year", days: 365 },
+  { key: "1w", label: "1 week ago", days: 7 },
+  { key: "1m", label: "1 month ago", days: 30 },
+  { key: "3m", label: "3 months ago", days: 90 },
+  { key: "6m", label: "6 months ago", days: 180 },
+  { key: "1y", label: "1 year ago", days: 365 },
   { key: "all", label: "All time", days: null },
 ] as const;
 export type DateWindowKey = (typeof DATE_WINDOWS)[number]["key"];

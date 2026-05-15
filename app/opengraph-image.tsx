@@ -20,9 +20,9 @@ export default async function OpengraphImage() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          background: "#16161a",
+          background: "#0a0a0a",
           fontFamily: "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace",
-          color: "#e8e6df",
+          color: "#ffffff",
         }}
       >
         <div
@@ -32,13 +32,13 @@ export default async function OpengraphImage() {
             justifyContent: "center",
             width: 200,
             height: 200,
-            borderRadius: 36,
-            background: "#1d1d22",
-            color: "#e6a04c",
+            borderRadius: "50%",
+            background: "#111214",
+            color: "#60a5fa",
             fontSize: 110,
             fontWeight: 700,
             lineHeight: 1,
-            border: "2px solid #33333d",
+            border: "2px solid rgba(255,255,255,0.10)",
           }}
         >
           rp
@@ -56,7 +56,7 @@ export default async function OpengraphImage() {
 
         <div
           style={{
-            color: "#9a988e",
+            color: "#d4d4d4",
             fontSize: 30,
             marginTop: 10,
           }}
@@ -73,18 +73,18 @@ export default async function OpengraphImage() {
               gap: 12,
               marginTop: 52,
               fontSize: 32,
-              color: "#9a988e",
+              color: "#d4d4d4",
             }}
           >
             <div style={{ display: "flex", alignItems: "baseline", gap: 14 }}>
-              <span style={{ color: "#e6a04c", fontWeight: 700 }}>{maps.toLocaleString()}</span>
+              <span style={{ color: "#60a5fa", fontWeight: 700 }}>{maps.toLocaleString()}</span>
               <span>farm maps across</span>
-              <span style={{ color: "#e6a04c", fontWeight: 700 }}>{scores.toLocaleString()}</span>
+              <span style={{ color: "#60a5fa", fontWeight: 700 }}>{scores.toLocaleString()}</span>
               <span>scores</span>
             </div>
             <div style={{ display: "flex", alignItems: "baseline", gap: 14 }}>
               <span>from</span>
-              <span style={{ color: "#e6a04c", fontWeight: 700 }}>{players.toLocaleString()}</span>
+              <span style={{ color: "#60a5fa", fontWeight: 700 }}>{players.toLocaleString()}</span>
               <span>players</span>
             </div>
           </div>
@@ -95,7 +95,7 @@ export default async function OpengraphImage() {
             position: "absolute",
             bottom: 32,
             right: 40,
-            color: "#6b6a63",
+            color: "#9ca3af",
             fontSize: 22,
           }}
         >

@@ -80,8 +80,8 @@ export function ModFilterPopover<V extends string>({
           style={{ transform: `translateX(calc(-50% + ${offsetX}px))` }}
         >
           <div
-            className="flex flex-wrap items-center justify-center gap-1 bg-bg-elev border border-line rounded-lg p-1.5 shadow-xl shadow-black/40"
-            style={{ maxWidth: "min(20rem, calc(100vw - 1rem))" }}
+            className="flex flex-col gap-1 bg-bg-elev border border-white/10 rounded-xl p-1.5 shadow-xl shadow-black/40 w-max"
+            style={{ maxWidth: "calc(100vw - 1rem)" }}
           >
             {options.map((v) => (
               <button
@@ -92,7 +92,7 @@ export function ModFilterPopover<V extends string>({
                   onSelect(v);
                   setOpen(false);
                 }}
-                className="block"
+                className="block w-full"
               >
                 {renderOption(v)}
               </button>

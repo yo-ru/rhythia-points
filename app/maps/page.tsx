@@ -1,5 +1,7 @@
 import { MapFilters } from "@/components/MapFilters";
 import { MapsList } from "@/components/MapsList";
+import { MapsHero } from "@/components/MapsHero";
+import { MapsExplore } from "@/components/MapsExplore";
 import { parseMapsFilters, queryMaps } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
@@ -17,10 +19,10 @@ export default async function MapsPage({ searchParams }: { searchParams: SearchP
   });
 
   return (
-    <div className="space-y-3">
-      <div className="sticky top-0 z-20 -mx-4 px-4 pt-1 pb-2 -mt-1 bg-bg">
-        <MapFilters />
-      </div>
+    <div className="space-y-4 text-white">
+      <MapsHero />
+      <MapsExplore />
+      <MapFilters />
       <MapsList
         key={filterKey}
         initialRows={rows}

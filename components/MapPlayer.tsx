@@ -408,7 +408,7 @@ function PlayerWidget() {
 
   return (
     <div className="fixed bottom-2 left-2 right-2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:bottom-3 z-50 max-w-5xl sm:w-[min(64rem,calc(100vw-1rem))]">
-      <div className="bg-bg-elev border border-line rounded-xl shadow-2xl shadow-black/50 overflow-hidden">
+      <div className="bg-bg-elev border border-white/10 rounded-xl shadow-2xl shadow-black/60 overflow-hidden">
         <div className="flex items-center gap-3 p-2 sm:p-2.5">
         {track.cover ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -429,11 +429,8 @@ function PlayerWidget() {
                 {track.title}
               </span>
               {speed !== 1 && (
-                <span
-                  className="mod-badge mod-speed is-on pointer-events-none shrink-0 cursor-default"
-                  style={{ width: 32, height: 26 }}
-                >
-                  <SpeedIcon speed={speed} size={20} />
+                <span className="inline-flex shrink-0">
+                  <SpeedIcon speed={speed} size={28} />
                 </span>
               )}
             </div>
@@ -522,7 +519,7 @@ function PlayerWidget() {
         </button>
         </div>
         {previewActive && (
-          <div className="px-3 pb-3 border-t border-line/60 pt-3">
+          <div className="px-3 pb-3 border-t border-white/10 pt-3">
             {phase === "ready" && previewNotes && previewNotes.length > 0 ? (
               <MapPreviewCanvas
                 notes={previewNotes}
@@ -562,11 +559,11 @@ function LoadingPanel({ phase, hasNotes }: { phase: Phase | null; hasNotes: bool
     "";
   const isDone = phase === "done";
   return (
-    <div className="w-full aspect-video rounded flex flex-col items-center justify-center gap-4 text-sm text-text-muted">
-      <div className={isDone ? "text-accent" : undefined}>{msg}</div>
-      <div className="w-56 h-1 rounded-full bg-bg-row overflow-hidden">
+    <div className="w-full aspect-video rounded flex flex-col items-center justify-center gap-4 text-sm text-white/65">
+      <div className={isDone ? "text-blue-400" : undefined}>{msg}</div>
+      <div className="w-56 h-1 rounded-full bg-neutral-800 overflow-hidden">
         <div
-          className="h-full bg-accent rounded-full transition-[width] duration-500 ease-out"
+          className="h-full bg-blue-400 rounded-full transition-[width] duration-500 ease-out"
           style={{ width: `${progress * 100}%` }}
         />
       </div>
@@ -576,14 +573,14 @@ function LoadingPanel({ phase, hasNotes }: { phase: Phase | null; hasNotes: bool
 
 function PlayIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="#16161a" aria-hidden="true" className="ml-0.5">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="#0a0a0a" aria-hidden="true" className="ml-0.5">
       <path d="M8 5v14l11-7z" />
     </svg>
   );
 }
 function PauseIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="#16161a" aria-hidden="true">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="#0a0a0a" aria-hidden="true">
       <path d="M6 5h4v14H6zM14 5h4v14h-4z" />
     </svg>
   );

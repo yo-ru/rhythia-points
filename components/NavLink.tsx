@@ -11,8 +11,8 @@ export function NavLink({ href, children }: { href: string; children: React.Reac
       href={href}
       className={
         active
-          ? "text-text font-semibold"
-          : "text-text-dim hover:text-accent transition-colors"
+          ? "text-white font-semibold"
+          : "text-white/80 hover:text-white transition-colors"
       }
     >
       {children}

@@ -1,4 +1,4 @@
-export function HardrockIcon({ size = 22 }: { size?: number }) {
+export function HardrockIcon({ size = 36 }: { size?: number }) {
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
@@ -7,7 +7,7 @@ export function HardrockIcon({ size = 22 }: { size?: number }) {
       height={size}
       alt=""
       draggable={false}
-      className="mod-icon-png pointer-events-none select-none"
+      className="pointer-events-none select-none object-contain"
     />
   );
 }

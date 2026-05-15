@@ -22,11 +22,11 @@ export function DiscordButton() {
       type="button"
       onClick={copy}
       title={copied ? "Copied!" : `Copy Discord: ${DISCORD_USERNAME}`}
-      className="inline-flex items-center gap-1.5 text-text-dim hover:text-accent text-sm transition-colors"
+      className="inline-flex items-center gap-2 h-8 px-3 rounded-full border border-white/20 bg-black/30 text-white/90 hover:bg-black/50 hover:text-white hover:border-white/30 transition-colors text-xs"
     >
       <svg
-        width="16"
-        height="16"
+        width="14"
+        height="14"
         viewBox="0 0 24 24"
         fill="currentColor"
         aria-hidden="true"

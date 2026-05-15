@@ -13,7 +13,7 @@
     @apply transition-colors;
   }
   input, select {
-    @apply bg-bg-elev border border-line rounded px-2 py-1 text-sm text-text placeholder:text-text-muted focus:outline-none focus:border-accent;
+    @apply bg-neutral-900 border border-white/10 rounded-md px-3 py-2 text-sm text-text placeholder:text-neutral-500 focus:outline-none focus:border-white/30;
   }
   input[type="checkbox"] {
     @apply accent-accent;
@@ -21,48 +21,11 @@
 }
 
 @layer components {
-  .mod-badge {
-    @apply relative inline-flex items-center justify-center rounded font-mono uppercase
-           text-sm tracking-wider select-none cursor-pointer transition-colors;
-    width: 46px;
-    height: 38px;
-    background: #2a2a33;
-    color: #6b6a63;
-    border: 1px solid #34343f;
-  }
-  .mod-badge > span { @apply relative z-10; }
-
-  .mod-icon-png {
-    image-rendering: -webkit-optimize-contrast;
-  }
-  .mod-badge:not(.is-on):not(.is-any) .mod-icon-png {
-    filter: invert(1) brightness(0.85);
-    opacity: 0.8;
-  }
-  .mod-badge .mod-nm-text { color: #b9b8af; }
-  .mod-badge.is-on .mod-nm-text { color: #ffffff; }
-
-  .mod-badge.is-on.mod-speed { background: #c98a3a; color: #ffffff; border-color: #c98a3a; }
-  .mod-badge.is-on.mod-hr    { background: #ef5a6f; color: #ffffff; border-color: #ef5a6f; }
-  .mod-badge.is-on.mod-gh    { background: #a06ad4; color: #ffffff; border-color: #a06ad4; }
-
-  .mod-badge.is-any { color: #ffffff; }
-  .mod-badge.is-any.mod-speed {
-    background: linear-gradient(135deg, #c98a3a 50%, #2a2a33 50%);
-    border-color: #5f3f1c;
-  }
-  .mod-badge.is-any.mod-hr {
-    background: linear-gradient(135deg, #ef5a6f 50%, #2a2a33 50%);
-    border-color: #7a2630;
-  }
-  .mod-badge.is-any.mod-gh {
-    background: linear-gradient(135deg, #a06ad4 50%, #2a2a33 50%);
-    border-color: #4a2870;
-  }
-
-  .pill {
-    @apply inline-flex items-center justify-center px-2.5 h-8 rounded text-sm font-mono;
-    min-width: 64px;
+  .nav-tex {
+    background-image: url('/rhythia-bg.png');
+    background-repeat: repeat;
+    background-position: center;
+    background-size: 72px 100px;
   }
 
   .maps-grid {
@@ -70,12 +33,12 @@
     grid-template-columns:
       80px
       minmax(0, 1fr)
-      140px
+      130px
       52px
       52px
       52px
-      140px
-      140px
+      120px
+      120px
       72px
       60px;
     column-gap: 8px;

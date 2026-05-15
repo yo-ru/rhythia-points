@@ -44,12 +44,19 @@ function resetCamera() {
   UP.x = 0; UP.y = 1; UP.z = 0;
 }
 
-const NOTE_RGB = "245, 185, 102";
+const NOTE_PALETTE: string[] = [
+  "255, 179, 186",
+  "255, 223, 186",
+  "255, 255, 186",
+  "186, 255, 201",
+  "186, 225, 255",
+  "212, 186, 255",
+];
 const CURSOR_RGB = "109, 213, 255";
 const CURSOR_FILL = "#6dd5ff";
-const FIELD_STROKE = "rgba(230, 160, 76, 0.55)";
-const SQUARE_STROKE = "rgba(245, 185, 102, 0.35)";
-const LINE_STROKE = "rgba(230, 160, 76, 0.22)";
+const FIELD_STROKE = "rgba(255, 255, 255, 0.55)";
+const SQUARE_STROKE = "rgba(255, 255, 255, 0.4)";
+const LINE_STROKE = "rgba(255, 255, 255, 0.22)";
 const TRAIL_MS = 260;
 
 function noteToWorld(x: number, y: number) {
@@ -394,7 +401,7 @@ function drawTunnelLines(ctx: CanvasRenderingContext2D, w: number, h: number, tS
       if (!a || !b) continue;
       const fade = edgeFade(z, Z_NEAR, Z_FAR, FADE_EDGE);
       if (fade <= 0) continue;
-      ctx.strokeStyle = `rgba(230, 160, 76, ${(0.22 * fade).toFixed(3)})`;
+      ctx.strokeStyle = `rgba(255, 255, 255, ${(0.22 * fade).toFixed(3)})`;
       ctx.beginPath();
       ctx.moveTo(a.px, a.py);
       ctx.lineTo(b.px, b.py);
@@ -444,7 +451,7 @@ function drawSpinningSquares(ctx: CanvasRenderingContext2D, w: number, h: number
       else ctx.lineTo(p.px, p.py);
     }
     ctx.closePath();
-    ctx.strokeStyle = `rgba(245, 185, 102, ${(cfg.baseAlpha * fade).toFixed(3)})`;
+    ctx.strokeStyle = `rgba(255, 255, 255, ${(cfg.baseAlpha * fade).toFixed(3)})`;
     ctx.lineWidth = 1.5;
     ctx.stroke();
   }
@@ -512,12 +519,12 @@ function drawNotes(ctx: CanvasRenderingContext2D, notes: SspmNote[], tMs: number
   const refPixelHalf = Math.abs(refSize.px - refProj.px);
 
   const start = lowerBound(notes, tMs);
-  type V = { n: SspmNote; dt: number };
+  type V = { n: SspmNote; dt: number; idx: number };
   const visible: V[] = [];
   for (let i = start; i < notes.length; i++) {
     const dt = notes[i]!.ms - tMs;
     if (dt > LOOKAHEAD_MS) break;
-    visible.push({ n: notes[i]!, dt });
+    visible.push({ n: notes[i]!, dt, idx: i });
   }
   visible.sort((a, b) => b.dt - a.dt);
 
@@ -530,8 +537,9 @@ function drawNotes(ctx: CanvasRenderingContext2D, notes: SspmNote[], tMs: number
     const halfPx = Math.max(3, refPixelHalf * depthScale);
     const closeness = 1 - v.dt / LOOKAHEAD_MS;
     const alpha = Math.max(0, Math.min(1, 0.45 + closeness * 0.55));
+    const colorRgb = NOTE_PALETTE[v.idx % NOTE_PALETTE.length]!;
     ctx.lineWidth = Math.max(1.8, halfPx * 0.18);
-    ctx.strokeStyle = `rgba(${NOTE_RGB}, ${alpha.toFixed(3)})`;
+    ctx.strokeStyle = `rgba(${colorRgb}, ${alpha.toFixed(3)})`;
     drawRoundRect(ctx, center.px - halfPx, center.py - halfPx, halfPx * 2, halfPx * 2, halfPx * 0.32);
     ctx.stroke();
   }
@@ -749,7 +757,7 @@ export function MapPreviewCanvas({ notes, waypoints, getTimeMs, getHitsoundVolum
   }, []);
 
   return (
-    <div ref={containerRef} className="w-full aspect-video relative">
+    <div ref={containerRef} className="w-full aspect-video relative bg-black rounded-lg overflow-hidden">
       <canvas ref={canvasRef} className="block" />
       <button
         type="button"
