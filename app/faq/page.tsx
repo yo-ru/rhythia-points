@@ -7,20 +7,22 @@ export default function FaqPage() {
         <p>For each unique (map, mods) combination:</p>
         <ol className="list-decimal list-inside space-y-1 mt-2 pl-2">
           <li>
-            Add up how often it appears in player top 100s, weighted sharply by position.
-            A player&apos;s #1 score contributes ~1.0; #5 contributes ~0.13; #20
-            contributes nearly 0.
+            Add up how often it appears in player top 100s, weighted by position.
+            A player&apos;s #1 score contributes 1.0; #10 contributes ~0.43; #50
+            contributes ~0.015. Geometric decay so the long tail of someone&apos;s
+            top-100 still counts.
           </li>
           <li>
             Divide by how many players play at that map&apos;s RP level, so popular
             difficulty bands don&apos;t dominate.
           </li>
           <li>
-            Divide by hours since the map was last updated.
+            Divide by log(hours since the map was last updated). Old farms get a
+            gentle nudge down, not a heavy penalty.
           </li>
         </ol>
         <p className="mt-2">
-          Formula adapted from{" "}
+          Original formula adapted from{" "}
           <a
             className="underline hover:text-accent"
             href="https://github.com/grumd/osu-pps"
@@ -28,7 +30,7 @@ export default function FaqPage() {
             rel="noopener noreferrer"
           >
             grumd/osu-pps
-          </a>.
+          </a>; the magnitude curve and time decay have been retuned for Rhythia.
         </p>
       </Section>
 
