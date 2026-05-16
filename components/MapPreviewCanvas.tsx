@@ -336,8 +336,8 @@ function cursorAt(wps: Waypoint[], tMs: number): { x: number; y: number } | null
     p0y = p2.y - v2x;
   }
   if (sinOut < SPIN_STRAIGHT_SIN && dotOut < -0.5 && !p3IsCorner) {
-    p3x = p1.x - v2y;
-    p3y = p1.y + v2x;
+    p3x = p1.x + v2y;
+    p3y = p1.y - v2x;
   }
 
   const segDur = p2.ms - p1.endMs;
