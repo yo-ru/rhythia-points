@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from
 import { DATE_WINDOWS, MAPS_SORT_OPTIONS, SPEED_OPTIONS } from "@/lib/types";
 import { HardrockIcon } from "@/components/icons/HardrockIcon";
 import { GhostIcon } from "@/components/icons/GhostIcon";
-import { SpeedIcon } from "@/components/icons/SpeedIcon";
+import { speedIconUrl } from "@/components/icons/SpeedIcon";
 import { ModFilterPopover } from "@/components/ModFilterPopover";
 
 function TextFilter({
@@ -530,7 +530,7 @@ function SpeedBadge({
         ) : (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={`/mods/${speedFile(speed as number)}`}
+            src={speedIconUrl(speed as number)}
             alt=""
             draggable={false}
             className="pointer-events-none select-none w-full h-full object-contain"
@@ -542,21 +542,6 @@ function SpeedBadge({
       </span>
     </span>
   );
-}
-
-function speedFile(speed: number): string {
-  const map: Record<string, string> = {
-    "0.75": "modspeedminusminusminus.png",
-    "0.8": "modspeedminusminus.png",
-    "0.87": "modspeedminus.png",
-    "1": "modspeed.png",
-    "1.0": "modspeed.png",
-    "1.15": "modspeedplus.png",
-    "1.25": "modspeedplusplus.png",
-    "1.35": "modspeedplusplusplus.png",
-    "1.45": "modspeedplusplusplusplus.png",
-  };
-  return map[String(speed)] ?? "modspeed.png";
 }
 
 const DIFFICULTY_PRESETS: Array<{

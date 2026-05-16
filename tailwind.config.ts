@@ -24,12 +24,6 @@ const config: Config = {
           DEFAULT: "#60a5fa",
           bright: "#93c5fd",
         },
-        brand: {
-          blue: "#3179d6",
-          discord: "#5562ea",
-          purple: "#6220EC",
-        },
-        rose: "#dc2626",
         len: {
           short: "#4ade80",
           med: "#a3e635",

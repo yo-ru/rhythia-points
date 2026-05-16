@@ -55,8 +55,6 @@ const NOTE_PALETTE: string[] = [
 const CURSOR_RGB = "109, 213, 255";
 const CURSOR_FILL = "#6dd5ff";
 const FIELD_STROKE = "rgba(255, 255, 255, 0.55)";
-const SQUARE_STROKE = "rgba(255, 255, 255, 0.4)";
-const LINE_STROKE = "rgba(255, 255, 255, 0.22)";
 const TRAIL_MS = 260;
 
 function noteToWorld(x: number, y: number) {
