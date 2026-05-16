@@ -514,7 +514,7 @@ function drawRoundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: n
   ctx.quadraticCurveTo(x, y, x + rr, y);
 }
 
-function drawNotes(ctx: CanvasRenderingContext2D, notes: SspmNote[], tMs: number, w: number, h: number) {
+function drawNotes(ctx: CanvasRenderingContext2D, notes: SspmNote[], tMs: number, w: number, h: number, ghost: boolean) {
   const CELL = (2 * GRID_HALF) / 3;
   const NOTE_HALF = CELL * 0.42;
   const refProj = project(0, 0, 0, w, h);
@@ -540,7 +540,12 @@ function drawNotes(ctx: CanvasRenderingContext2D, notes: SspmNote[], tMs: number
     const depthScale = Math.max(0.06, refProj.depth / Math.max(1e-6, center.depth));
     const halfPx = Math.max(3, refPixelHalf * depthScale);
     const closeness = 1 - v.dt / LOOKAHEAD_MS;
-    const alpha = Math.max(0, Math.min(1, 0.45 + closeness * 0.55));
+    let alpha = Math.max(0, Math.min(1, 0.45 + closeness * 0.55));
+    if (ghost) {
+      const fade = Math.max(0, Math.min(1, (0.9 - closeness) / 0.5));
+      alpha *= fade;
+    }
+    if (alpha <= 0.001) continue;
     const colorRgb = NOTE_PALETTE[v.idx % NOTE_PALETTE.length]!;
     ctx.lineWidth = Math.max(1.8, halfPx * 0.18);
     ctx.strokeStyle = `rgba(${colorRgb}, ${alpha.toFixed(3)})`;
@@ -733,7 +738,7 @@ export function MapPreviewCanvas({ notes, waypoints, speed, hardrock, ghost, get
         drawTunnelLines(ctx, w, h, tSec);
         drawSpinningSquares(ctx, w, h, tSec);
         drawField(ctx, w, h);
-        if (!ghostRef.current) drawNotes(ctx, notesRef.current, tMs, w, h);
+        drawNotes(ctx, notesRef.current, tMs, w, h, ghostRef.current);
         if (!spinModeRef.current) drawTrail(ctx, trailRef.current, tMs, w, h);
         drawCursor(ctx, cursorPos, w, h);
 
