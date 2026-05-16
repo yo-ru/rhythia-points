@@ -569,12 +569,12 @@ function CoverThumb({ title, cover }: { title: string; cover: string | null }) {
   const safeUrl = cover && !failed ? encodeURI(cover) : null;
   return (
     <div
-      className="w-12 h-12 sm:w-14 sm:h-14 rounded shrink-0 overflow-hidden relative"
+      className="w-12 h-12 sm:w-14 sm:h-14 rounded shrink-0 overflow-hidden relative flex items-end p-1.5 text-[10px] font-mono text-white/40 select-none"
       style={{
         background: `linear-gradient(135deg, hsl(${hue} 50% 28%) 0%, hsl(${(hue + 40) % 360} 40% 18%) 100%)`,
       }}
     >
-      {safeUrl && (
+      {safeUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={safeUrl}
@@ -583,6 +583,8 @@ function CoverThumb({ title, cover }: { title: string; cover: string | null }) {
           draggable={false}
           className="absolute inset-0 w-full h-full object-cover"
         />
+      ) : (
+        <span className="relative truncate">{title.slice(0, 3).toUpperCase()}</span>
       )}
     </div>
   );
