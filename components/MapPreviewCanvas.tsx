@@ -94,6 +94,7 @@ const APPROACH_CURVE = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0];
 const GHOST_FADE_POWER = 1.3;
 const GHOST_FADE_START_FRAC = 18 / 50;
 const GHOST_FADE_END_FRAC = 6 / 50;
+const PINGPONG_PERP_K = 0.35;
 const STREAM_GAP_MS = 60;
 const ROUNDNESS = 3.5;
 const HIT_HALF = 0.57;
@@ -332,12 +333,12 @@ function cursorAt(wps: Waypoint[], tMs: number): { x: number; y: number } | null
   const dotIn  = len1 * len2 > 0.0001 ? (v1x * v2x + v1y * v2y) / (len1 * len2) : 1;
   const dotOut = len2 * len3 > 0.0001 ? (v2x * v3x + v2y * v3y) / (len2 * len3) : 1;
   if (sinIn  < SPIN_STRAIGHT_SIN && dotIn  < -0.5) {
-    p0x = p2.x + v2y;
-    p0y = p2.y - v2x;
+    p0x = p2.x + v2y * PINGPONG_PERP_K;
+    p0y = p2.y - v2x * PINGPONG_PERP_K;
   }
   if (sinOut < SPIN_STRAIGHT_SIN && dotOut < -0.5) {
-    p3x = p1.x + v2y;
-    p3y = p1.y - v2x;
+    p3x = p1.x + v2y * PINGPONG_PERP_K;
+    p3y = p1.y - v2x * PINGPONG_PERP_K;
   }
 
   const segDur = p2.ms - p1.endMs;
