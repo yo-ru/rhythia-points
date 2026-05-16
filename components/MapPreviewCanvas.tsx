@@ -329,6 +329,16 @@ function cursorAt(wps: Waypoint[], tMs: number): { x: number; y: number } | null
     p3x = p2.x + v2x;
     p3y = p2.y + v2y;
   }
+  const dotIn  = len1 * len2 > 0.0001 ? (v1x * v2x + v1y * v2y) / (len1 * len2) : 1;
+  const dotOut = len2 * len3 > 0.0001 ? (v2x * v3x + v2y * v3y) / (len2 * len3) : 1;
+  if (sinIn  < SPIN_STRAIGHT_SIN && dotIn  < -0.5 && !p0IsCorner) {
+    p0x = p2.x + v2y;
+    p0y = p2.y - v2x;
+  }
+  if (sinOut < SPIN_STRAIGHT_SIN && dotOut < -0.5 && !p3IsCorner) {
+    p3x = p1.x - v2y;
+    p3y = p1.y + v2x;
+  }
 
   const segDur = p2.ms - p1.endMs;
   if (segDur < 1) return { x: p1.x, y: p1.y };
