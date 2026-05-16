@@ -414,17 +414,7 @@ function PlayerWidget() {
     <div className="fixed bottom-2 left-2 right-2 sm:left-1/2 sm:right-auto sm:-translate-x-1/2 sm:bottom-3 z-50 max-w-5xl sm:w-[min(64rem,calc(100vw-1rem))]">
       <div className="bg-bg-elev border border-white/10 rounded-xl shadow-2xl shadow-black/60 overflow-hidden">
         <div className="flex items-center gap-3 p-2 sm:p-2.5">
-        {track.cover ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={encodeURI(track.cover)}
-            alt=""
-            className="w-12 h-12 sm:w-14 sm:h-14 rounded shrink-0 object-cover"
-            draggable={false}
-          />
-        ) : (
-          <div className="w-12 h-12 sm:w-14 sm:h-14 rounded shrink-0 bg-bg-row" />
-        )}
+        <CoverThumb title={track.title} cover={track.cover} />
 
         <div className="min-w-0 flex-1 flex flex-col gap-1.5">
           <div className="min-w-0">
@@ -567,6 +557,33 @@ function LoadingPanel({ phase, hasNotes }: { phase: Phase | null; hasNotes: bool
           style={{ width: `${progress * 100}%` }}
         />
       </div>
+    </div>
+  );
+}
+
+function CoverThumb({ title, cover }: { title: string; cover: string | null }) {
+  const [failed, setFailed] = useState(false);
+  let hash = 0;
+  for (let i = 0; i < title.length; i++) hash = (hash * 31 + title.charCodeAt(i)) | 0;
+  const hue = Math.abs(hash) % 360;
+  const safeUrl = cover && !failed ? encodeURI(cover) : null;
+  return (
+    <div
+      className="w-12 h-12 sm:w-14 sm:h-14 rounded shrink-0 overflow-hidden relative"
+      style={{
+        background: `linear-gradient(135deg, hsl(${hue} 50% 28%) 0%, hsl(${(hue + 40) % 360} 40% 18%) 100%)`,
+      }}
+    >
+      {safeUrl && (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={safeUrl}
+          alt=""
+          onError={() => setFailed(true)}
+          draggable={false}
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+      )}
     </div>
   );
 }
