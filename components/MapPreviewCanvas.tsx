@@ -91,6 +91,9 @@ function lowerBound(notes: SspmNote[], tMs: number) {
 }
 
 const APPROACH_CURVE = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0];
+const GHOST_FADE_POWER = 1.3;
+const GHOST_FADE_START_FRAC = 18 / 50;
+const GHOST_FADE_END_FRAC = 6 / 50;
 const STREAM_GAP_MS = 60;
 const ROUNDNESS = 3.5;
 const HIT_HALF = 0.57;
@@ -542,8 +545,11 @@ function drawNotes(ctx: CanvasRenderingContext2D, notes: SspmNote[], tMs: number
     const closeness = 1 - v.dt / LOOKAHEAD_MS;
     let alpha = Math.max(0, Math.min(1, 0.45 + closeness * 0.55));
     if (ghost) {
-      const fade = Math.max(0, Math.min(1, (0.75 - closeness) / 0.4));
-      alpha *= fade;
+      const distFrac = 1 - closeness;
+      const t = Math.max(0, Math.min(1,
+        (distFrac - GHOST_FADE_END_FRAC) / (GHOST_FADE_START_FRAC - GHOST_FADE_END_FRAC),
+      ));
+      alpha *= Math.pow(t, GHOST_FADE_POWER);
     }
     if (alpha <= 0.001) continue;
     const colorRgb = NOTE_PALETTE[v.idx % NOTE_PALETTE.length]!;
