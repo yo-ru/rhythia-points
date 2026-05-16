@@ -58,8 +58,8 @@ const NOTE_PALETTE: string[] = [
   "186, 225, 255",
   "212, 186, 255",
 ];
-const CURSOR_RGB = "109, 213, 255";
-const CURSOR_FILL = "#6dd5ff";
+const CURSOR_RGB = "96, 165, 250";
+const CURSOR_FILL = "#60a5fa";
 const FIELD_STROKE = "rgba(255, 255, 255, 0.55)";
 const TRAIL_MS = 260;
 
