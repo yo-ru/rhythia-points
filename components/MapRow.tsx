@@ -34,6 +34,8 @@ function DesktopRow({ row, mapUrl }: { row: MapRowData; mapUrl: string | null })
         image={map.image}
         hasAudio={map.hasAudio === true && map.mapId != null}
         variantSpeed={variant.speed}
+        variantHardrock={variant.hardrock}
+        variantGhost={variant.ghost}
       />
 
       <div className="min-w-0 py-1.5 px-2 flex items-center gap-3">
@@ -120,6 +122,8 @@ function MobileRow({ row, mapUrl }: { row: MapRowData; mapUrl: string | null }) 
         image={map.image}
         hasAudio={map.hasAudio === true && map.mapId != null}
         variantSpeed={variant.speed}
+        variantHardrock={variant.hardrock}
+        variantGhost={variant.ghost}
         mobile
       />
       <div className="flex-1 min-w-0 p-2.5 flex flex-col gap-1.5">
@@ -196,6 +200,8 @@ function Cover({
   image,
   hasAudio,
   variantSpeed,
+  variantHardrock,
+  variantGhost,
   mobile = false,
 }: {
   mapId: number | null;
@@ -205,6 +211,8 @@ function Cover({
   image: string | null;
   hasAudio: boolean;
   variantSpeed: number;
+  variantHardrock: boolean;
+  variantGhost: boolean;
   mobile?: boolean;
 }) {
   const [failed, setFailed] = useState(false);
@@ -256,6 +264,8 @@ function Cover({
               cover: image,
               src: `/api/audio/${mapId}`,
               speed: variantSpeed,
+              hardrock: variantHardrock,
+              ghost: variantGhost,
               previewMapId: mapId,
             });
           }}

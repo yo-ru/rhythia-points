@@ -2,7 +2,6 @@
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { usePathname } from "next/navigation";
-import { SpeedIcon } from "@/components/icons/SpeedIcon";
 import type { SspmNote } from "@/lib/sspm";
 import { MapPreviewCanvas, buildWaypoints } from "@/components/MapPreviewCanvas";
 import type { Waypoint } from "@/components/MapPreviewCanvas";
@@ -18,6 +17,8 @@ type Track = {
   cover: string | null;
   src: string;
   speed: number;
+  hardrock: boolean;
+  ghost: boolean;
   previewMapId?: number | null;
 };
 
@@ -424,16 +425,9 @@ function PlayerWidget() {
 
         <div className="min-w-0 flex-1 flex flex-col gap-1.5">
           <div className="min-w-0">
-            <div className="flex items-center gap-1.5 min-w-0">
-              <span className="text-sm font-medium text-text truncate leading-tight">
-                {track.title}
-              </span>
-              {speed !== 1 && (
-                <span className="inline-flex shrink-0">
-                  <SpeedIcon speed={speed} size={28} />
-                </span>
-              )}
-            </div>
+            <span className="text-sm font-medium text-text truncate block leading-tight">
+              {track.title}
+            </span>
             {track.mapper && (
               <div className="text-xs text-text-muted truncate leading-tight">
                 {track.mapper}
@@ -524,6 +518,9 @@ function PlayerWidget() {
               <MapPreviewCanvas
                 notes={previewNotes}
                 waypoints={waypoints}
+                speed={track.speed}
+                hardrock={track.hardrock}
+                ghost={track.ghost}
                 getTimeMs={getCurrentTimeMs}
                 getHitsoundVolume={getHitsoundVolume}
               />

@@ -2,10 +2,16 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { SspmNote } from "@/lib/sspm";
+import { SpeedIcon } from "@/components/icons/SpeedIcon";
+import { HardrockIcon } from "@/components/icons/HardrockIcon";
+import { GhostIcon } from "@/components/icons/GhostIcon";
 
 type Props = {
   notes: SspmNote[];
   waypoints: Waypoint[];
+  speed: number;
+  hardrock: boolean;
+  ghost: boolean;
   getTimeMs: () => number;
   getHitsoundVolume: () => number;
 };
@@ -634,7 +640,7 @@ function playHitsound(ac: AudioContext, volume: number) {
   osc.stop(now + 0.05);
 }
 
-export function MapPreviewCanvas({ notes, waypoints, getTimeMs, getHitsoundVolume }: Props) {
+export function MapPreviewCanvas({ notes, waypoints, speed, hardrock, ghost, getTimeMs, getHitsoundVolume }: Props) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const rafRef = useRef<number | null>(null);
@@ -645,7 +651,9 @@ export function MapPreviewCanvas({ notes, waypoints, getTimeMs, getHitsoundVolum
   const hsVolRef = useRef(getHitsoundVolume);
   const [spinMode, setSpinMode] = useState(false);
   const spinModeRef = useRef(false);
+  const ghostRef = useRef(ghost);
   useEffect(() => { spinModeRef.current = spinMode; }, [spinMode]);
+  useEffect(() => { ghostRef.current = ghost; }, [ghost]);
   const prevTimeRef = useRef<number | null>(null);
   const acRef = useRef<AudioContext | null>(null);
   const trailRef = useRef<TrailPoint[]>([]);
@@ -725,7 +733,7 @@ export function MapPreviewCanvas({ notes, waypoints, getTimeMs, getHitsoundVolum
         drawTunnelLines(ctx, w, h, tSec);
         drawSpinningSquares(ctx, w, h, tSec);
         drawField(ctx, w, h);
-        drawNotes(ctx, notesRef.current, tMs, w, h);
+        if (!ghostRef.current) drawNotes(ctx, notesRef.current, tMs, w, h);
         if (!spinModeRef.current) drawTrail(ctx, trailRef.current, tMs, w, h);
         drawCursor(ctx, cursorPos, w, h);
 
@@ -772,6 +780,15 @@ export function MapPreviewCanvas({ notes, waypoints, getTimeMs, getHitsoundVolum
           <line x1="18" y1="12" x2="21" y2="12" />
         </svg>
       </button>
+      <div className="absolute bottom-2 right-2 flex flex-col items-center gap-1">
+        <SpeedIcon speed={speed} size={32} />
+        <span className={hardrock ? "" : "opacity-25"}>
+          <HardrockIcon size={32} />
+        </span>
+        <span className={ghost ? "" : "opacity-25"}>
+          <GhostIcon size={32} />
+        </span>
+      </div>
     </div>
   );
 }

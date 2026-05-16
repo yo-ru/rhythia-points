@@ -65,6 +65,8 @@ export function MapGridCard({ row }: { row: MapRowData }) {
       cover: map.image,
       src: `/api/audio/${map.mapId}`,
       speed: variant.speed,
+      hardrock: variant.hardrock,
+      ghost: variant.ghost,
       previewMapId: map.mapId,
     });
   }
