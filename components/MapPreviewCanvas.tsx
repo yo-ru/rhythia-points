@@ -94,6 +94,7 @@ const APPROACH_CURVE = [0.0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0];
 const GHOST_FADE_POWER = 1.3;
 const GHOST_FADE_START_FRAC = 18 / 50;
 const GHOST_FADE_END_FRAC = 6 / 50;
+const HALF_GHOST_FADE_STRENGTH = 0.5;
 const STREAM_GAP_MS = 60;
 const ROUNDNESS = 3.5;
 const HIT_HALF = 0.57;
@@ -516,7 +517,7 @@ function drawRoundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: n
   ctx.quadraticCurveTo(x, y, x + rr, y);
 }
 
-function drawNotes(ctx: CanvasRenderingContext2D, notes: SspmNote[], tMs: number, w: number, h: number, ghost: boolean) {
+function drawNotes(ctx: CanvasRenderingContext2D, notes: SspmNote[], tMs: number, w: number, h: number, ghost: boolean, halfGhost: boolean) {
   const CELL = (2 * GRID_HALF) / 3;
   const NOTE_HALF = CELL * 0.42;
   const refProj = project(0, 0, 0, w, h);
@@ -543,12 +544,13 @@ function drawNotes(ctx: CanvasRenderingContext2D, notes: SspmNote[], tMs: number
     const halfPx = Math.max(3, refPixelHalf * depthScale);
     const closeness = 1 - v.dt / LOOKAHEAD_MS;
     let alpha = Math.max(0, Math.min(1, 0.45 + closeness * 0.55));
-    if (ghost) {
+    if (ghost || halfGhost) {
       const distFrac = 1 - closeness;
       const t = Math.max(0, Math.min(1,
         (distFrac - GHOST_FADE_END_FRAC) / (GHOST_FADE_START_FRAC - GHOST_FADE_END_FRAC),
       ));
-      alpha *= Math.pow(t, GHOST_FADE_POWER);
+      const strength = ghost ? 1 : HALF_GHOST_FADE_STRENGTH;
+      alpha *= (1 - strength) + Math.pow(t, GHOST_FADE_POWER) * strength;
     }
     if (alpha <= 0.001) continue;
     const colorRgb = NOTE_PALETTE[v.idx % NOTE_PALETTE.length]!;
@@ -660,10 +662,13 @@ export function MapPreviewCanvas({ notes, waypoints, speed, hardrock, ghost, get
   const timeRef = useRef(getTimeMs);
   const hsVolRef = useRef(getHitsoundVolume);
   const [spinMode, setSpinMode] = useState(false);
+  const [halfGhostMode, setHalfGhostMode] = useState(false);
   const spinModeRef = useRef(false);
   const ghostRef = useRef(ghost);
+  const halfGhostRef = useRef(false);
   useEffect(() => { spinModeRef.current = spinMode; }, [spinMode]);
   useEffect(() => { ghostRef.current = ghost; }, [ghost]);
+  useEffect(() => { halfGhostRef.current = halfGhostMode; }, [halfGhostMode]);
   const prevTimeRef = useRef<number | null>(null);
   const acRef = useRef<AudioContext | null>(null);
   const trailRef = useRef<TrailPoint[]>([]);
@@ -743,7 +748,7 @@ export function MapPreviewCanvas({ notes, waypoints, speed, hardrock, ghost, get
         drawTunnelLines(ctx, w, h, tSec);
         drawSpinningSquares(ctx, w, h, tSec);
         drawField(ctx, w, h);
-        drawNotes(ctx, notesRef.current, tMs, w, h, ghostRef.current);
+        drawNotes(ctx, notesRef.current, tMs, w, h, ghostRef.current, halfGhostRef.current);
         if (!spinModeRef.current) drawTrail(ctx, trailRef.current, tMs, w, h);
         drawCursor(ctx, cursorPos, w, h);
 
@@ -775,6 +780,18 @@ export function MapPreviewCanvas({ notes, waypoints, speed, hardrock, ghost, get
   return (
     <div ref={containerRef} className="w-full aspect-video relative bg-black rounded-lg overflow-hidden">
       <canvas ref={canvasRef} className="block" />
+      <button
+        type="button"
+        onClick={() => setHalfGhostMode((s) => !s)}
+        title={halfGhostMode ? "Disable half-ghost" : "Enable half-ghost"}
+        disabled={ghost}
+        className={`absolute bottom-11 left-2 w-8 h-8 inline-flex items-center justify-center rounded border bg-bg-elev/80 backdrop-blur-sm transition-colors ${ghost ? "opacity-40 cursor-not-allowed text-text-dim border-line" : halfGhostMode ? "text-accent border-accent" : "text-text-dim border-line hover:text-text hover:border-line"}`}
+      >
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M12 3a7 7 0 0 0-7 7v9l3-2 2 2 2-2 2 2 2-2 3 2v-9a7 7 0 0 0-7-7Z" />
+          <path d="M12 3v18" strokeDasharray="2 2" />
+        </svg>
+      </button>
       <button
         type="button"
         onClick={() => setSpinMode((s) => !s)}
