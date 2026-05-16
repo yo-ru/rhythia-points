@@ -542,7 +542,7 @@ function drawNotes(ctx: CanvasRenderingContext2D, notes: SspmNote[], tMs: number
     const closeness = 1 - v.dt / LOOKAHEAD_MS;
     let alpha = Math.max(0, Math.min(1, 0.45 + closeness * 0.55));
     if (ghost) {
-      const fade = Math.max(0, Math.min(1, (0.9 - closeness) / 0.5));
+      const fade = Math.max(0, Math.min(1, (0.55 - closeness) / 0.4));
       alpha *= fade;
     }
     if (alpha <= 0.001) continue;

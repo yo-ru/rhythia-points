@@ -211,15 +211,18 @@ export function MapPlayerProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (phase === "ready" && pendingPlayRef.current) {
       pendingPlayRef.current = false;
-      audioRef.current?.play().catch(() => {});
+      const el = audioRef.current;
+      if (el && track) el.playbackRate = track.speed;
+      el?.play().catch(() => {});
       setPlaying(true);
     }
-  }, [phase]);
+  }, [phase, track]);
 
   const toggle = useCallback(() => {
     const el = audioRef.current;
     if (!el || !track || !audioReady) return;
     if (el.paused) {
+      el.playbackRate = track.speed;
       el.play().catch(() => {});
       setPlaying(true);
     } else {
